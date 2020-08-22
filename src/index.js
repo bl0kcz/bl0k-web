@@ -38,8 +38,8 @@ const Header = {
   },
   view: () => {
     return [
-      m('h1.mx-5.text-left.text-xl', m('a', { href: '/', style: 'font-family: monospace;', onclick: reload }, 'bl0k.cz')),
-      m('p.text-sm', 'Rychlé zprávy z kryptoměn')
+      m('h1.mx-5.text-left.text-xl', m('a', { href: '/', style: 'font-family: monospace;', onclick: reload }, 'bl0k.cz'))
+      // m('p.text-sm', 'Rychlé zprávy z kryptoměn')
     ]
   }
 }
@@ -70,12 +70,12 @@ const FeedBig = {
       return m('.p-5', 'Načítám obsah ...')
     }
     return articles.articles.map(i => {
-      return m('article.flex.p-5', [
-        m('.w-1/6.text-sm.font-bold.leading-6.pr-2', [
-          m('p', formatDate(i.date)),
-          m('p', i.topic)
+      return m('article.lg:flex.px-5.pt-5.pb-2', [
+        m('.inline-block.lg:block.lg:w-1/6.text-sm.font-bold.leading-6.pr-2.pb-2', [
+          m('.inline-block.lg:block', formatDate(i.date)),
+          m('.inline-block.lg:block.pl-3.lg:pl-0', i.topic)
         ]),
-        m('.w-5/6', [
+        m('.inline-block.lg:block.lg:w-5/6', [
           m('.content', [
             m.trust(i.html)
           ]),

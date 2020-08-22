@@ -10,7 +10,8 @@ let dataLoading = false
 let data = {
   articles: [],
   important: [],
-  chains: {}
+  chains: {},
+  menu: []
 }
 
 function formatDate (input) {
@@ -50,6 +51,18 @@ function loadData (refresh = false) {
     setTimeout(() => {
       twttr.widgets.load()
     }, 100)
+
+    data.menu = [
+      { chainId: 'all', url: '/', chain: { name: 'Vše' } }
+    ]
+    for (const chainId of Object.keys(data.chains)) {
+      const chain = data.chains[chainId]
+      if (!chain.major) {
+        continue
+      }
+      data.menu.push({ chainId, chain })
+    }
+    data.menu.push({ chainId: 'oth', chain: { name: 'Ostatní' } })
   })
 }
 
@@ -59,17 +72,14 @@ function reload () {
 }
 
 const Header = {
-  view: () => {
-    const menu = [
-      { chainId: 'all', url: '/', chain: { name: 'Vše' } }
-    ]
-    for (const chainId of Object.keys(data.chains)) {
-      menu.push({ chainId, chain: data.chains[chainId] })
-    }
+  view: (vnode) => {
     return [
       m('h1.mx-5.text-left.text-xl', m(m.route.Link, { href: '/', style: 'font-family: monospace;', onclick: reload }, 'bl0k.cz')),
-      m('.pl-5.text-sm', menu.map(mi => {
-        return m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'pr-3' }, (opts.chain === mi.chainId || (mi.chainId === 'all' && !opts.chain)) ? m('span.underline', mi.chain.name) : mi.chain.name)
+      m('.pl-5.text-sm', data.menu.map(mi => {
+        if (vnode.attrs.chain === mi.chainId || (mi.chainId === 'all' && !vnode.attrs.chain)) {
+          return m('span.underline.pr-3', mi.chain.name)
+        }
+        return m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'pr-3' }, mi.chain.name)
       }))
       // m('p.text-sm', 'Rychlé zprávy z kryptoměn')
     ]
@@ -140,7 +150,7 @@ const App = {
   },
   view: (vnode) => {
     return [
-      m('header.flex.h-12.bg-gray-100.items-center', m(Header)),
+      m('header.flex.h-12.bg-gray-100.items-center', m(Header, vnode.attrs)),
       m('section.absolute.left-0.right-0.bottom-0', { style: 'top: 3rem;' }, [
         m('section.absolute.top-0.bottom-0.left-0.w-full.lg:w-4/6', [
           m('div.absolute.inset-0', [

@@ -1,5 +1,8 @@
+/* globals twttr */
 const m = require('mithril')
 const dateFns = require('date-fns')
+
+const API_URL = 'https://api.bl0k.cz/1'
 
 let articles = null
 
@@ -20,7 +23,7 @@ function loadData (refresh = false) {
     articles = null
     m.redraw()
   }
-  m.request('http://localhost:3000/1/articles').then(data => {
+  m.request(`${API_URL}/articles`).then(data => {
     articles = data
     m.redraw()
     setTimeout(() => {
@@ -36,7 +39,7 @@ const Header = {
   view: () => {
     return [
       m('h1.mx-5.text-left.text-xl', m('a', { href: '/', style: 'font-family: monospace;', onclick: reload }, 'bl0k.cz')),
-      m('p.text-sm', 'Rychlé zprávy z kryptoměn'),
+      m('p.text-sm', 'Rychlé zprávy z kryptoměn')
     ]
   }
 }
@@ -50,7 +53,7 @@ const Feed = {
       return m('article.px-5.pt-5.pb-2', [
         m('div.font-bold.pb-2.text-sm', [
           m('span', formatDate(i.date)),
-          m('span.pl-3', i.topic),
+          m('span.pl-3', i.topic)
         ]),
         m('.content', m.trust(i.html)),
         i.embed && i.embed.tweet && i.importantEmbed !== false ? m('div', [
@@ -87,9 +90,8 @@ const FeedBig = {
 
 function reload () {
   loadData(true)
-  return false;
+  return false
 }
-
 
 m.mount(document.getElementById('feed'), Feed)
 m.mount(document.getElementById('feed-big'), FeedBig)

@@ -5,11 +5,11 @@ module.exports = {
 
   theme: {
     fontFamily: {
-      'inter': [ 'Inter', 'sans-serif' ],
-      'mono': [ 'monospace' ]
+      inter: ['Inter', 'sans-serif'],
+      mono: ['monospace']
     }
   },
   variants: {},
   corePlugins: {},
-  plugins: [],
+  plugins: []
 }

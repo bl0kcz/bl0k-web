@@ -1,21 +1,31 @@
 /* globals twttr */
 const m = require('mithril')
 const dateFns = require('date-fns')
+const qs = require('querystring')
 
 const API_URL = 'https://api.bl0k.cz/1'
 
-let articles = []
+let opts = {}
+let dataLoading = false
+let data = {
+  articles: [],
+  important: [],
+  chains: {}
+}
 
 function formatDate (input) {
   const d = new Date(input)
   const time = dateFns.format(d, 'HH:mm')
+
+  let str = ''
   if (dateFns.isToday(d)) {
-    return time
+    str = time
+  } else if (dateFns.isYesterday(d)) {
+    str = `včera ${time}`
+  } else {
+    str = `${dateFns.format(d, 'd.M.')} ${time}`
   }
-  if (dateFns.isYesterday(d)) {
-    return `včera ${time}`
-  }
-  return `${dateFns.format(d, 'd.M.')} ${time}`
+  return m('span', { title: dateFns.format(d, 'd.M.yyyy HH:mm') }, str)
 }
 
 function articleLink (item, text) {
@@ -23,13 +33,20 @@ function articleLink (item, text) {
 }
 
 function loadData (refresh = false) {
+  dataLoading = true
   if (refresh) {
-    articles = []
+    data.articles = []
+    data.important = []
     m.redraw()
   }
-  m.request(`${API_URL}/articles`).then(data => {
-    articles = data
+  const query = {}
+  if (opts.chain) {
+    query.chain = opts.chain
+  }
+  m.request(`${API_URL}/articles?${qs.stringify(query)}`).then(out => {
+    data = out
     m.redraw()
+    dataLoading = false
     setTimeout(() => {
       twttr.widgets.load()
     }, 100)
@@ -43,8 +60,17 @@ function reload () {
 
 const Header = {
   view: () => {
+    const menu = [
+      { chainId: 'all', url: '/', chain: { name: 'Vše' } }
+    ]
+    for (const chainId of Object.keys(data.chains)) {
+      menu.push({ chainId, chain: data.chains[chainId] })
+    }
     return [
-      m('h1.mx-5.text-left.text-xl', m('a', { href: '/', style: 'font-family: monospace;', onclick: reload }, 'bl0k.cz'))
+      m('h1.mx-5.text-left.text-xl', m(m.route.Link, { href: '/', style: 'font-family: monospace;', onclick: reload }, 'bl0k.cz')),
+      m('.pl-5.text-sm', menu.map(mi => {
+        return m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'pr-3' }, (opts.chain === mi.chainId || (mi.chainId === 'all' && !opts.chain)) ? m('span.underline', mi.chain.name) : mi.chain.name)
+      }))
       // m('p.text-sm', 'Rychlé zprávy z kryptoměn')
     ]
   }
@@ -52,10 +78,13 @@ const Header = {
 
 const Feed = {
   view: () => {
-    if (articles.length === 0) {
+    if (dataLoading) {
       return m('.p-5', 'Načítám obsah ...')
     }
-    return articles.important.map(i => {
+    if (data.important.length === 0) {
+      return m('.p-5', 'Nenalezeny žádné zprávy.')
+    }
+    return data.important.map(i => {
       return m('article.px-5.pt-5.pb-2', [
         m('div.font-bold.pb-2.text-sm', [
           m('span', articleLink(i, formatDate(i.date))),
@@ -72,10 +101,13 @@ const Feed = {
 
 const FeedBig = {
   view: () => {
-    if (articles.length === 0) {
+    if (dataLoading) {
       return m('.p-5', 'Načítám obsah ...')
     }
-    return articles.articles.map(i => {
+    if (data.articles.length === 0) {
+      return m('.p-5', 'Nenalezeny žádné zprávy.')
+    }
+    return data.articles.map(i => {
       return m('article.lg:flex.px-5.pt-5.pb-2', { id: i.id }, [
         m('.inline-block.lg:block.lg:w-1/6.text-sm.font-bold.leading-6.pr-2.pb-2', [
           m('.inline-block.lg:block', articleLink(i, formatDate(i.date))),
@@ -95,24 +127,32 @@ const FeedBig = {
 }
 
 const App = {
-  oninit: () => {
+  oninit: (vnode) => {
+    opts = vnode.attrs
     loadData()
   },
-  view: () => {
+  onupdate: (vnode) => {
+    console.log('opts:', opts)
+    if (JSON.stringify(opts) !== JSON.stringify(vnode.attrs)) {
+      opts = vnode.attrs
+      loadData()
+    }
+  },
+  view: (vnode) => {
     return [
       m('header.flex.h-12.bg-gray-100.items-center', m(Header)),
       m('section.absolute.left-0.right-0.bottom-0', { style: 'top: 3rem;' }, [
         m('section.absolute.top-0.bottom-0.left-0.w-full.lg:w-4/6', [
           m('div.absolute.inset-0', [
             m('div.absolute.inset-0.overflow-hidden', [
-              m('div.absolute.inset-0.overflow-scroll', m(FeedBig))
+              m('div.absolute.inset-0.overflow-scroll', m(FeedBig, vnode.attrs))
             ])
           ])
         ]),
         m('section.absolute.inset-y-0.right-0.bg-gray-200.hidden.lg:block.w-2/6', [
           m('h2.p-5.font-bold.text-lg', 'Důležité zprávy'),
           m('div.overflow-hidden.absolute.left-0.right-0.bottom-0', { style: 'top: 3.5rem;' }, [
-            m('div.overflow-scroll.absolute.inset-0.pb-10', m(Feed))
+            m('div.overflow-scroll.absolute.inset-0.pb-10', m(Feed, vnode.attrs))
           ])
         ])
       ])
@@ -120,4 +160,8 @@ const App = {
   }
 }
 
-m.mount(document.getElementById('app'), App)
+const root = document.getElementById('app')
+m.route(root, '/', {
+  '/': App,
+  '/chain/:chain': App
+})

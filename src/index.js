@@ -71,20 +71,31 @@ function reload () {
   return false
 }
 
+const Logo = {
+  view () {
+    return m('span.mx-5.text-xl.pr-3', m(m.route.Link, { href: '/', style: 'font-family: monospace;', onclick: reload }, 'bl0k.cz'))
+  }
+}
+
 const Header = {
   view: (vnode) => {
     return [
-      m('h1.mx-5.text-left.text-xl', m(m.route.Link, { href: '/', style: 'font-family: monospace;', onclick: reload }, 'bl0k.cz')),
-      m('.pl-5.text-sm', data.menu.map(mi => {
+      m('h1', m(Logo)),
+      m('.text-sm', data.menu.map(mi => {
         const name = mi.chain.name
         /* if (mi.chain.ico) {
           name = [ m(`i.pr-1.${mi.chain.ico}`, { style: 'font-family: cryptofont' } ), name ]
         } */
         if (vnode.attrs.chain === mi.chainId || (mi.chainId === 'all' && !vnode.attrs.chain)) {
-          return m('span.underline.font-medium.pr-3', name)
+          return m('span.underline.font-semibold.pr-3', name)
         }
         return m('.hidden.lg:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'pr-3' }, name))
-      }))
+      })),
+      m('.absolute.top-0.right-0.h-12.flex.items-center', [
+        m('.text-sm.pr-5', [
+          m('div', m(m.route.Link, { href: '/p/o-nas' }, m.trust('Co je to bl0k?')))
+        ])
+      ])
       // m('p.text-sm', 'Rychlé zprávy z kryptoměn')
     ]
   }
@@ -159,7 +170,7 @@ const App = {
         m('section.absolute.top-0.bottom-0.left-0.w-full.lg:w-4/6', [
           m('div.absolute.inset-0', [
             m('div.absolute.inset-0.overflow-hidden', [
-              m('div.absolute.inset-0.overflow-scroll', m(FeedBig, vnode.attrs))
+              m('div.absolute.inset-0.overflow-scroll.pb-10', m(FeedBig, vnode.attrs))
             ])
           ])
         ]),
@@ -174,8 +185,46 @@ const App = {
   }
 }
 
+let page = null
+let pageId = null
+let pageLoading = false
+
+function loadPage () {
+  pageLoading = true
+  const query = { id: pageId }
+  m.request(`${API_URL}/page?${qs.stringify(query)}`).then(out => {
+    page = out
+    pageLoading = false
+    m.redraw()
+  })
+}
+
+const PageApp = {
+  oninit (vnode) {
+    pageId = vnode.attrs.page
+    loadPage()
+  },
+  view () {
+    return [
+      m('.h-12.items-center.flex.bg-gray-100', [
+        m('h1', m(Logo)),
+        m('span.pl-3.text-sm', m(m.route.Link, { href: '/' }, '← Zpět na zprávy'))
+      ]),
+      m('.p-5', m({
+        view () {
+          if (!page || pageLoading) {
+            return m('div', 'Načítám stránku')
+          }
+          return m('.markdown-body', m.trust(page.html))
+        }
+      }))
+    ]
+  }
+}
+
 const root = document.getElementById('app')
 m.route(root, '/', {
   '/': App,
-  '/chain/:chain': App
+  '/chain/:chain': App,
+  '/p/:page': PageApp
 })

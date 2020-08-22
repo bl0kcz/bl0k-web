@@ -1,3 +1,6 @@
 [submodule "vendor/cryptofont"]
 	path = vendor/cryptofont
 	url = https://github.com/monzanifabio/cryptofont.git
+[submodule "vendor/github-markdown-css"]
+	path = vendor/github-markdown-css
+	url = https://github.com/sindresorhus/github-markdown-css.git

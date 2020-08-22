@@ -46,8 +46,8 @@ function loadData (refresh = false) {
   }
   m.request(`${API_URL}/articles?${qs.stringify(query)}`).then(out => {
     data = out
-    m.redraw()
     dataLoading = false
+    m.redraw()
     setTimeout(() => {
       twttr.widgets.load()
     }, 100)
@@ -76,10 +76,14 @@ const Header = {
     return [
       m('h1.mx-5.text-left.text-xl', m(m.route.Link, { href: '/', style: 'font-family: monospace;', onclick: reload }, 'bl0k.cz')),
       m('.pl-5.text-sm', data.menu.map(mi => {
+        const name = mi.chain.name
+        /* if (mi.chain.ico) {
+          name = [ m(`i.pr-1.${mi.chain.ico}`, { style: 'font-family: cryptofont' } ), name ]
+        } */
         if (vnode.attrs.chain === mi.chainId || (mi.chainId === 'all' && !vnode.attrs.chain)) {
-          return m('span.underline.pr-3', mi.chain.name)
+          return m('span.underline.font-medium.pr-3', name)
         }
-        return m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'pr-3' }, mi.chain.name)
+        return m('.hidden.lg:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'pr-3' }, name))
       }))
       // m('p.text-sm', 'Rychlé zprávy z kryptoměn')
     ]
@@ -145,7 +149,7 @@ const App = {
     console.log('opts:', opts)
     if (JSON.stringify(opts) !== JSON.stringify(vnode.attrs)) {
       opts = vnode.attrs
-      loadData()
+      loadData(true)
     }
   },
   view: (vnode) => {

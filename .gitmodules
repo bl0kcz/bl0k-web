@@ -1,0 +1,3 @@
+[submodule "vendor/cryptofont"]
+	path = vendor/cryptofont
+	url = https://github.com/monzanifabio/cryptofont.git

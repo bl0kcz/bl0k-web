@@ -1,6 +1,6 @@
 {
-  "name": "news-board",
-  "version": "1.0.0-b1",
+  "name": "bl0k-web",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -11,14 +11,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@tailwindcss/typography": "^0.2.0",
     "autoprefixer": "^9.8.6",
     "date-fns": "^2.15.0",
+    "marked": "^1.1.1",
     "mithril": "^2.0.4",
     "parcel": "^1.12.4",
     "postcss-modules": "^3.2.1",
     "tailwindcss": "^1.7.3"
   },
   "devDependencies": {
+    "@tailwindcss/custom-forms": "^0.2.1",
     "postcss-fontpath": "^1.0.0",
     "tailwind": "^4.0.0"
   }

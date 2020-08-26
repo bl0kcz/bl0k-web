@@ -22,7 +22,7 @@ const Layout = {
 
   view (vnode) {
     return [
-      m(SimpleHeader, { name: m(m.route.Link, { href: '/console' }, 'Konzole') }),
+      m(SimpleHeader, { name: m(m.route.Link, { class: 'hover:underline', href: '/console' }, 'Konzole') }),
       m('div', vnode.children)
     ]
   }
@@ -57,7 +57,7 @@ let articleLoading = false
 
 function loadArticle (id) {
   articleLoading = true
-  m.request(`${data.options.apiUrl}/article/${id}?compat=false`).then(out => {
+  window.bl0k.request(`${data.options.apiUrl}/article/${id}?compat=false`).then(out => {
     article = out
 
     for (const col of ['text', 'tags', 'chains', 'tags']) {
@@ -77,7 +77,7 @@ function saveArticle () {
   if (!article) {
     return alert('No id!')
   }
-  m.request({
+  window.bl0k.request({
     method: 'POST',
     url: `${data.options.apiUrl}/article/${article.id}?compat=false`,
     body: Message.toAPIObject()

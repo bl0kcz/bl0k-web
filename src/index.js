@@ -28,6 +28,73 @@ const loadStatus = {
   active: function () { return this.items.length > 0 }
 }
 
+const bl0k = window.bl0k = {
+  auth: null,
+  ethLogin () {
+    if (!window.ethereum) {
+      alert('Nemáte nainstalovanou MetaMask!')
+      return false
+    }
+    ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
+      const addr = accounts[0]
+      /* web3.eth.sign(window.bl0k.ethAccount, 'xxx', (err, res) => {
+        console.log(err, res)
+      }) */
+      const msg = `Přihlášení na bl0k.cz [${Number(new Date())}]`
+      const cmd = { method: 'personal_sign', params: [msg, addr], from: addr }
+      web3.currentProvider.sendAsync(cmd, (err, res) => {
+        if (err) {
+          console.log('Chyba při podpisu')
+          console.error(err)
+          return false
+        }
+
+        bl0k.request({
+          url: `${options.apiUrl}/eth-login`,
+          method: 'POST',
+          body: { addr, msg, sign: res.result }
+        }).then((out) => {
+          if (out.error) {
+            alert(out.error)
+            return false
+          }
+
+          localStorage.setItem('auth', JSON.stringify(out))
+          window.bl0k.auth = out
+          m.redraw()
+        })
+      })
+    })
+    return false
+  },
+  logout () {
+    localStorage.removeItem('auth')
+    window.bl0k.auth = null
+    m.redraw()
+
+    return false
+  },
+  request (props) {
+    const par = {}
+    if (typeof (props) === 'string') {
+      par.url = props
+    } else {
+      Object.assign(par, props)
+    }
+    if (window.bl0k.auth) {
+      par.headers = {
+        authorization: `Bearer ${window.bl0k.auth.token}`
+      }
+    }
+    return m.request(par)
+  }
+}
+
+const auth = localStorage.getItem('auth')
+if (auth) {
+  bl0k.auth = JSON.parse(auth)
+}
+
 function formatDate (input) {
   const d = new Date(input)
   const time = dateFns.format(d, 'HH:mm')
@@ -59,7 +126,7 @@ function loadData (refresh = false) {
   if (opts.chain) {
     query.chains = opts.chain
   }
-  m.request(`${options.apiUrl}/bundle?${qs.stringify(query)}`).then(out => {
+  bl0k.request(`${options.apiUrl}/bundle?${qs.stringify(query)}`).then(out => {
     data = out
     dataLoading = false
     m.redraw()
@@ -105,8 +172,8 @@ const Header = {
         return m('.hidden.sm:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'mr-3 py-4 hover:underline' }, name))
       })),
       m('.absolute.top-0.right-0.h-12.flex.items-center.text-sm.pr-5', [
-        m('.mr-5', m(m.route.Link, { href: '/console/new', class: 'py-4 hover:underline' }, m.trust('Přidat novou zprávu'))),
-        m('div', m(m.route.Link, { href: '/p/o-nas', class: 'hover:underline' }, m.trust('Co je to bl0k?')))
+        m(m.route.Link, { href: '/console/new', class: 'hover:underline' }, m.trust('Přidat novou zprávu'))
+        // m('div', m(m.route.Link, { href: '/p/o-nas', class: 'hover:underline' }, m.trust('Co je to bl0k?')))
       ])
       // m('p.text-sm', 'Rychlé zprávy z kryptoměn')
     ]
@@ -192,7 +259,15 @@ const ArticleContent = {
 const Feed = {
   view: () => {
     if (dataLoading) {
-      return m('.p-5', 'Načítám obsah ...')
+      return m('.p-5', [
+        m('.ph-item > .ph-col-12', [
+          m('.ph-picture'),
+          m('.ph-row', [
+            m('.ph-col-6.big'),
+            m('.ph-col-4.empty.big')
+          ])
+        ])
+      ])
     }
     if (data.important.length === 0) {
       return m('.p-5', 'Nenalezeny žádné zprávy.')
@@ -204,6 +279,26 @@ const Feed = {
   }
 }
 
+const InfoPanel = {
+  view () {
+    return m('.p-5', [
+      m('.bg-teal-100.border-t-4.border-teal-500.rounded-b.text-teal-900.px-4.py-3', { role: 'alert' }, [
+        m('.flex', [
+          m('.py-1', m('svg.fill-current.h-6.w-6.text-teal-500.mr-4', { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 20 20' }, m('path', { d: 'M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z' }))),
+          m('div', [
+            m('p.font-bold', 'Vítejte na bl0k.cz!'),
+            m('p.text-sm', [
+              // 'Toto je zkušební provoz. ',
+              'Již brzy vám začneme přinášet aktuální zprávy z kryptoměn. ',
+              m(m.route.Link, { class: 'underline', href: '/p/o-nas' }, 'Co je to Bl0k.cz?')
+            ])
+          ])
+        ])
+      ])
+    ])
+  }
+}
+
 const FeedBig = {
   view: () => {
     if (dataLoading) {
@@ -212,10 +307,13 @@ const FeedBig = {
     if (data.articles.length === 0) {
       return m('.p-5', 'Nenalezeny žádné zprávy.')
     }
-    return data.articles.map(i => {
-      return m('article.lg:flex.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed',
-        { id: i.id, onclick: selectItem(`ax:${i.id}`) }, m(ArticleContent, { item: i, maxi: true }))
-    })
+    return [
+      opts.chain ? '' : m(InfoPanel),
+      m('div', data.articles.map(i => {
+        return m('article.lg:flex.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed',
+          { id: i.id, onclick: selectItem(`ax:${i.id}`) }, m(ArticleContent, { item: i, maxi: true }))
+      }))
+    ]
   }
 }
 
@@ -263,7 +361,7 @@ let pageLoading = false
 function loadPage () {
   pageLoading = true
   const query = { id: pageId }
-  m.request(`${options.apiUrl}/page?${qs.stringify(query)}`).then(out => {
+  bl0k.request(`${options.apiUrl}/page?${qs.stringify(query)}`).then(out => {
     page = out
     pageLoading = false
     m.redraw()
@@ -299,7 +397,7 @@ function consoleComponentRoute (cmp) {
 }
 
 function loadArticle (id) {
-  m.request(`${options.apiUrl}/article/${id}`).then(out => {
+  bl0k.request(`${options.apiUrl}/article/${id}`).then(out => {
     data.article = out
     m.redraw()
 

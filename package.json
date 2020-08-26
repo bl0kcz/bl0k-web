@@ -14,15 +14,20 @@
     "@tailwindcss/typography": "^0.2.0",
     "autoprefixer": "^9.8.6",
     "date-fns": "^2.15.0",
+    "ethereum-blockies-base64": "^1.0.2",
     "marked": "^1.1.1",
     "mithril": "^2.0.4",
     "parcel": "^1.12.4",
+    "placeholder-loading": "^0.2.6",
     "postcss-modules": "^3.2.1",
     "tailwindcss": "^1.7.3"
   },
   "devDependencies": {
     "@tailwindcss/custom-forms": "^0.2.1",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
     "postcss-fontpath": "^1.0.0",
+    "sass": "^1.26.10",
     "tailwind": "^4.0.0"
   }
 }

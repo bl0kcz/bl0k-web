@@ -79,23 +79,25 @@ const bl0k = window.bl0k = {
     location.reload()
     return false
   },
-  deleteArticle (id, url) {
-    const q = confirm(`Opravdu smazat zprávu "${url}"?`)
-    if (!q) {
+  deleteArticle (item) {
+    if (!confirm(`Opravdu smazat zprávu "${item.sid}"?`)) {
       return false
     }
     window.bl0k.request({
       method: 'DELETE',
-      url: `/article/${id}`
+      url: `/article/${item.id}`
     }).then(() => {
       loadData(true)
     })
     return false
   },
-  changeArticleType (id, type) {
+  changeArticleType (item, type) {
+    if (!confirm(`Opravdu změnit stav zprávy "${item.id}" na "${type}"?`)) {
+      return false
+    }
     window.bl0k.request({
       method: 'POST',
-      url: `/article/${id}/type`,
+      url: `/article/${item.id}/type`,
       body: {
         type
       }
@@ -249,7 +251,7 @@ const DetailBox = {
   view (vnode) {
     const item = vnode.attrs.item
     const auth = window.bl0k.auth
-    const admin = (auth.user && auth.user.admin)
+    const admin = auth && (auth.user && auth.user.admin)
     const allowModify = auth && (auth.userId === item.author.id || admin)
 
     return m('.w-full.mt-5', [
@@ -260,9 +262,9 @@ const DetailBox = {
         vnode.attrs.standalone ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Permalink'),
         // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
         allowModify ? m(m.route.Link, { class: 'ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit') : '',
-        allowModify ? m('a', { class: 'ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item.id, item.url) }, 'Smazat') : '',
-        allowModify && item.type === 'draft' ? m('a', { class: 'ml-5 hover:underline text-green-700', href: '#', onclick: () => window.bl0k.changeArticleType(item.id, 'in-queue') }, 'Do fronty') : '',
-        admin ? m('a', { class: 'ml-5 hover:underline text-green-700 font-semibold', href: '#', onclick: () => window.bl0k.changeArticleType(item.id, 'public') }, 'Publikovat') : ''
+        allowModify ? m('a', { class: 'ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item) }, 'Smazat') : '',
+        allowModify && item.type === 'draft' ? m('a', { class: 'ml-5 hover:underline text-green-700', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'in-queue') }, 'Do fronty') : '',
+        admin ? m('a', { class: 'ml-5 hover:underline text-green-700 font-semibold', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'public') }, 'Publikovat') : ''
         // m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
       ])
     ])
@@ -280,10 +282,10 @@ const ArticleContent = {
     const i = this.item
     const embedAllowed = !this.important || i.importantEmbed === true
     const types = {
-      'in-queue': { text: 've frontě', color: 'bg-green-300' },
-      draft: { text: 'koncept', color: 'bg-blue-300' }
+      'in-queue': { text: 've frontě', color: 'bg-green-300.text-green-700' },
+      draft: { text: 'koncept', color: 'bg-blue-300.text-blue-700' }
     }
-    const typeBadge = i.type !== 'public' ? m('.inline-block.px-2.py-1.mb-2.mr-5.rounded.font-normal.' + types[i.type].color, types[i.type].text) : ''
+    const typeBadge = i.type !== 'public' ? m('.inline-block.px-2.py-1.mb-2.mr-5.rounded-md.' + types[i.type].color, types[i.type].text) : ''
 
     const parts = {
       header: m(`div.font-bold.pb-${this.standalone ? 5 : 2}.text-sm`, [

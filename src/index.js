@@ -126,11 +126,11 @@ const bl0k = window.bl0k = {
     const auth = localStorage.getItem('auth')
     if (auth) {
       window.bl0k.auth = JSON.parse(auth)
+      this.request('/me').then(user => {
+        this.auth.user = user
+        m.redraw()
+      })
     }
-    this.request('/me').then(user => {
-      this.auth.user = user
-      m.redraw()
-    })
   },
   init () {
     this.initAuth()

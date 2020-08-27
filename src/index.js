@@ -60,11 +60,11 @@ const bl0k = window.bl0k = {
           }
 
           localStorage.setItem('auth', JSON.stringify(out))
-          window.bl0k.auth = out
           window.bl0k.initAuth()
           m.redraw()
 
           const rt = m.route.get()
+          console.log(rt)
           if (rt.match(/^\/chain/) || rt === '/') {
             loadData(true)
           }
@@ -75,14 +75,8 @@ const bl0k = window.bl0k = {
   },
   logout () {
     localStorage.removeItem('auth')
-    window.bl0k.auth = null
-    m.redraw()
-
-    const rt = m.route.get()
-    if (rt.match(/^\/chain/) || rt === '/') {
-      loadData(true)
-    }
-
+    // window.bl0k.auth = null
+    location.reload()
     return false
   },
   deleteArticle (id, url) {
@@ -97,6 +91,17 @@ const bl0k = window.bl0k = {
       loadData(true)
     })
     return false
+  },
+  changeArticleType (id, type) {
+    window.bl0k.request({
+      method: 'POST',
+      url: `/article/${id}/type`,
+      body: {
+        type
+      }
+    }).then(() => {
+      loadData(true)
+    })
   },
   request (props) {
     const par = {}
@@ -122,6 +127,7 @@ const bl0k = window.bl0k = {
     }
     this.request('/me').then(user => {
       this.auth.user = user
+      m.redraw()
     })
   },
   init () {
@@ -243,7 +249,8 @@ const DetailBox = {
   view (vnode) {
     const item = vnode.attrs.item
     const auth = window.bl0k.auth
-    const allowModify = auth && (auth.userId === item.author.id || (auth.user && auth.user.admin))
+    const admin = (auth.user && auth.user.admin)
+    const allowModify = auth && (auth.userId === item.author.id || admin)
 
     return m('.w-full.mt-5', [
       m('.text-sm.flex.w-full.h-auto.items-center', [
@@ -253,7 +260,9 @@ const DetailBox = {
         vnode.attrs.standalone ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Permalink'),
         // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
         allowModify ? m(m.route.Link, { class: 'ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit') : '',
-        allowModify ? m('a', { class: 'ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item.id, item.url) }, 'Smazat') : ''
+        allowModify ? m('a', { class: 'ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item.id, item.url) }, 'Smazat') : '',
+        allowModify && item.type === 'draft' ? m('a', { class: 'ml-5 hover:underline text-green-700', href: '#', onclick: () => window.bl0k.changeArticleType(item.id, 'in-queue') }, 'Do fronty') : '',
+        admin ? m('a', { class: 'ml-5 hover:underline text-green-700 font-semibold', href: '#', onclick: () => window.bl0k.changeArticleType(item.id, 'public') }, 'Publikovat') : ''
         // m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
       ])
     ])
@@ -270,9 +279,15 @@ const ArticleContent = {
   view () {
     const i = this.item
     const embedAllowed = !this.important || i.importantEmbed === true
+    const types = {
+      'in-queue': { text: 've frontě', color: 'bg-green-300' },
+      draft: { text: 'koncept', color: 'bg-blue-300' }
+    }
+    const typeBadge = i.type !== 'public' ? m('.inline-block.px-2.py-1.mb-2.mr-5.rounded.font-normal.' + types[i.type].color, types[i.type].text) : ''
 
     const parts = {
       header: m(`div.font-bold.pb-${this.standalone ? 5 : 2}.text-sm`, [
+        typeBadge,
         m('span', articleLink(i, formatDate(i.date))),
         m('span.pl-3', chainTopic(i.chains, this)),
         m('span.pl-3.font-normal.text-gray-700', tagsTopic(i.tags, this))
@@ -286,6 +301,7 @@ const ArticleContent = {
 
     if (this.maxi) {
       parts.header = m('.inline-block.lg:block.lg:w-1/6.text-sm.font-bold.leading-6.pr-2.pb-2.lg:pb-0', [
+        typeBadge,
         m('.inline-block.lg:block', articleLink(i, formatDate(i.date))),
         m('.inline-block.lg:block.pl-3.lg:pl-0', chainTopic(i.chains, this)),
         m('.inline-block.lg:block.pl-3.lg:pl-0.font-normal.text-gray-700', tagsTopic(i.tags, this))

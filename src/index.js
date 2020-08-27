@@ -113,13 +113,22 @@ const bl0k = window.bl0k = {
       }
     }
     return m.request(par)
+  },
+  initAuth () {
+    const auth = localStorage.getItem('auth')
+    if (auth) {
+      window.bl0k.auth = JSON.parse(auth)
+    }
+    this.request('/me').then(user => {
+      this.auth.user = user
+    })
+  },
+  init () {
+    this.initAuth()
   }
 }
 
-const auth = localStorage.getItem('auth')
-if (auth) {
-  bl0k.auth = JSON.parse(auth)
-}
+bl0k.init()
 
 function formatDate (input) {
   const d = new Date(input)
@@ -236,10 +245,11 @@ const DetailBox = {
     const allowModify = auth && (auth.userId === item.author.id || auth.admin)
 
     return m('.w-full.mt-5', [
-      m('.text-sm', [
+      m('.text-sm.flex.w-full.h-auto.items-center', [
         // m('span.text-xs', item.id),
-        m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `@${item.author.username}`) : ''),
-        m(m.route.Link, { class: 'ml-5 hover:underline', href: item.url }, 'Permalink'),
+        m(m.route.Link, { class: 'w-6 h-6 mr-3', href: `/u/${item.author.username}` }, m('.inline-block.h-full.w-full.rounded-full', { style: `background: url(${item.author.avatar}); background-size: 100% 100%;` })),
+        m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `${item.author.username}`) : ''),
+        vnode.attrs.standalone ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Permalink'),
         // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
         allowModify ? m(m.route.Link, { class: 'ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit') : '',
         allowModify ? m('a', { class: 'ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item.id, item.url) }, 'Smazat') : ''
@@ -269,7 +279,7 @@ const ArticleContent = {
       content: [
         m('.content', m.trust(i.html)),
         i.embed && i.embed.tweet && embedAllowed ? m('div.flex.justify-center.mt-1', [m('.pt-0', m.trust(i.embed.tweet))]) : '',
-        (selected === `${this.maxi ? 'ax' : 'a'}:${i.id}` || this.standalone) ? m(`.pt-${this.standalone ? 2 : 0}`, m(DetailBox, { item: i })) : ''
+        (selected === `${this.maxi ? 'ax' : 'a'}:${i.id}` || this.standalone || i.type !== 'public') ? m(`.pt-${this.standalone ? 2 : 0}`, m(DetailBox, { item: i, standalone: this.standalone })) : ''
       ]
     }
 
@@ -323,7 +333,7 @@ const Feed = {
         const bg = ((type) => {
           switch (type) {
             case 'draft':
-              return 'bg-yellow-200'
+              return 'bg-blue-200'
             case 'in-queue':
               return 'bg-green-200'
           }

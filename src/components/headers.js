@@ -11,9 +11,15 @@ const AuthPart = {
       ? auth.username.substring(0, 6) + '...' + auth.username.substring(38)
       : auth.username
 
+    if (!auth.user) {
+      return null
+    }
+
     return m('.flex.items-center', [
-      m('.w-6.h-6.mr-2.rounded', { style: `background: url(${blockies(window.bl0k.auth.username)}); background-size: 100% 100%;` }),
-      m('span', username),
+      m(m.route.Link, { href: `/u/${auth.user.username}` },
+        m('.w-6.h-6.mr-2.rounded-full', { style: `background: url(${auth.user.avatar}); background-size: 100% 100%;` })
+      ),
+      m(m.route.Link, { class: 'hover:underline', href: `/u/${auth.user.username}` }, username),
       m('a.ml-2.hover:underline', { onclick: window.bl0k.logout, href: '#' }, '(odhlásit)')
     ])
   }

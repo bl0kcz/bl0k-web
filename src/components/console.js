@@ -1,3 +1,5 @@
+/* globals alert */
+
 const m = require('mithril')
 const { SimpleHeader } = require('./headers')
 const dateFns = require('date-fns')
@@ -62,9 +64,9 @@ function loadArticle (id) {
 
     for (const col of ['text', 'tags', 'chains', 'tags']) {
       if (col === 'chains' || col === 'tags') {
-        Message[col] = article[col].join(',')
+        Message[col] = article.data[col].join(',')
       } else {
-        Message[col] = article[col]
+        Message[col] = article.data[col]
       }
     }
 
@@ -73,13 +75,26 @@ function loadArticle (id) {
   })
 }
 
+function createArticle () {
+  window.bl0k.request({
+    method: 'POST',
+    url: '/articles?compat=true',
+    body: Message.toAPIObject()
+
+  }).then(out => {
+    m.route.set(`/z/${out.sid}`)
+  })
+
+  return false
+}
+
 function saveArticle () {
   if (!article) {
     return alert('No id!')
   }
   window.bl0k.request({
     method: 'POST',
-    url: `${data.options.apiUrl}/article/${article.id}?compat=false`,
+    url: `/article/${article.id}?compat=false`,
     body: Message.toAPIObject()
 
   }).then(out => {
@@ -105,9 +120,10 @@ function articleDiff () {
 
 const Editor = {
   oninit (vnode) {
-    loadArticle(vnode.attrs.id)
-
     this.mode = vnode.attrs.id ? 'edit' : 'create'
+    if (this.mode === 'edit') {
+      loadArticle(vnode.attrs.id)
+    }
   },
 
   onremove () {
@@ -134,6 +150,8 @@ const Editor = {
     })
     const tags = Message.tags.split(',').map(i => i.trim().toLowerCase()).map(i => `#${i}`)
     const diff = articleDiff()
+
+    const saveEnabled = (this.mode === 'edit' && diff) || (this.mode === 'create' && Message.text)
 
     return [
       m('.flex.justify-center.pt-4.pb-10', [
@@ -171,7 +189,7 @@ const Editor = {
             ]) : '',
             m('.mt-5.flex', [
               // m('div', 'diff=' + diff),
-              m(`button.bg-${diff ? 'blue-500' : 'gray-400.cursor-not-allowed'}${diff ? '.hover:bg-blue-700' : ''}.text-white.py-2.px-4.rounded`, { onclick: saveArticle, disabled: !diff ? 'disabled' : '' }, 'Uložit')
+              m(`button.bg-${saveEnabled ? 'blue-500' : 'gray-400.cursor-not-allowed'}${diff ? '.hover:bg-blue-700' : ''}.text-white.py-2.px-4.rounded`, { onclick: this.mode === 'create' ? createArticle : saveArticle, disabled: !saveEnabled ? 'disabled' : '' }, 'Uložit')
             ])
           ])
           /* m('.mt-1', [

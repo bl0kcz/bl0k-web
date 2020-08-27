@@ -1,4 +1,4 @@
-/* globals twttr */
+/* globals twttr, localStorage, web3, alert, ethereum */
 const m = require('mithril')
 const dateFns = require('date-fns')
 const qs = require('querystring')
@@ -24,7 +24,7 @@ let data = {
 const loadStatus = {
   items: [],
   start: function (j) { this.items.push(j) },
-  end: function (j) { this.item.pop(j) },
+  end: function (j) { this.items.pop(j) },
   active: function () { return this.items.length > 0 }
 }
 
@@ -80,6 +80,9 @@ const bl0k = window.bl0k = {
       par.url = props
     } else {
       Object.assign(par, props)
+    }
+    if (!par.url.match(/^http/)) {
+      par.url = options.apiUrl + par.url
     }
     if (window.bl0k.auth) {
       par.headers = {
@@ -180,16 +183,14 @@ const Header = {
   }
 }
 
-function chainTopic (chains) {
-  const ch = data.chains[chains[0]]
-  if (!ch) {
-    return 'n/a'
-  }
-  return m(m.route.Link, { href: `/chain/${ch.id}`, class: 'hover:underline' }, ch.name)
+function chainTopic (chains, article = {}) {
+  return (article.standalone ? chains : chains.slice(0, 1)).map(chain => {
+    return m(m.route.Link, { href: `/chain/${chain.id}`, class: 'hover:underline mr-2 inline' }, chain.name)
+  })
 }
 
-function tagsTopic (tags) {
-  return tags[0] ? '#' + tags[0] : ''
+function tagsTopic (tags, article = {}) {
+  return (article.standalone ? tags : tags.slice(0, 1)).map(t => m('.mr-2.inline', `#${t}`))
 }
 
 let selected = null
@@ -209,7 +210,7 @@ const DetailBox = {
     return m('.w-full.mt-5', [
       m('.text-sm', [
         // m('span.text-xs', item.id),
-        m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author}`, class: 'hover:underline text-md' }, `@${item.author}`) : ''),
+        m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `@${item.author.username}`) : ''),
         m(m.route.Link, { class: 'ml-5 hover:underline', href: item.url }, 'Permalink'),
         // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
         m(m.route.Link, { class: 'ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit'),
@@ -233,8 +234,8 @@ const ArticleContent = {
     const parts = {
       header: m(`div.font-bold.pb-${this.standalone ? 5 : 2}.text-sm`, [
         m('span', articleLink(i, formatDate(i.date))),
-        m('span.pl-3', chainTopic(i.chains)),
-        m('span.pl-3.font-normal.text-gray-700', tagsTopic(i.tags))
+        m('span.pl-3', chainTopic(i.chains, this)),
+        m('span.pl-3.font-normal.text-gray-700', tagsTopic(i.tags, this))
       ]),
       content: [
         m('.content', m.trust(i.html)),
@@ -246,8 +247,8 @@ const ArticleContent = {
     if (this.maxi) {
       parts.header = m('.inline-block.lg:block.lg:w-1/6.text-sm.font-bold.leading-6.pr-2.pb-2.lg:pb-0', [
         m('.inline-block.lg:block', articleLink(i, formatDate(i.date))),
-        m('.inline-block.lg:block.pl-3.lg:pl-0', chainTopic(i.chains)),
-        m('.inline-block.lg:block.pl-3.lg:pl-0.font-normal.text-gray-700', tagsTopic(i.tags))
+        m('.inline-block.lg:block.pl-3.lg:pl-0', chainTopic(i.chains, this)),
+        m('.inline-block.lg:block.pl-3.lg:pl-0.font-normal.text-gray-700', tagsTopic(i.tags, this))
       ])
       parts.content = m('.inline-block.lg:block.lg:w-5/6', parts.content)
     }
@@ -388,27 +389,29 @@ const PageApp = {
   }
 }
 
-function consoleComponentRoute (cmp) {
-  return {
-    render: (vnode) => {
-      return m(Console.Layout, { options }, m(Console[cmp], vnode.attrs))
-    }
-  }
-}
-
 function loadArticle (id) {
   bl0k.request(`${options.apiUrl}/article/${id}`).then(out => {
     data.article = out
     m.redraw()
 
     if (m.route.get() !== data.article.url) {
-      m.route.set(data.article.url, { replace: true })
+      m.route.set(data.article.url)
       return null
     }
     setTimeout(() => {
       twttr.widgets.load()
     }, 100)
   })
+}
+
+const ArticleData = {
+  comment: '',
+  setProperty: function (prop) {
+    return (e) => {
+      this[prop] = e.target.value
+      return true
+    }
+  }
 }
 
 const Article = {
@@ -428,12 +431,52 @@ const Article = {
           }
           return m('.w-full.flex.justify-center', [
             m('.sm:w-4/6.m-5.sm:pt-5', [
-              m('article.text-xl', m(ArticleContent, { item: data.article, standalone: true }))
+              m('.mb-10', [
+                m('article.text-xl', m(ArticleContent, { item: data.article, standalone: true }))
+              ])
+              /* m('.mb-5', [
+                m('h2.text-2xl', 'Komentáře (0)'),
+                //m('.mt-5', 'Žádný komentář nenalezen'),
+                m('form.lg:flex.mt-5', { onsubmit: () => false }, [
+                  m('.w-4/6', [
+                    m('textarea.w-full.form-textarea.mr-2', { oninput: (e) => { ArticleData.comment = e.target.value; return false; }, value: ArticleData.comment, placeholder: 'Váš komentář ..' }),
+                  ]),
+                  m('.w-auto', [
+                    m('button.ml-2.bg-blue-500.hover:bg-blue-700.text-white.py-2.px-4.rounded.mr-2.text-md', 'Vložit komentář'),
+                  ]),
+                ]),
+                m('p', '@@' + ArticleData.comment),
+              ]) */
             ])
           ])
         }
       })
     ]
+  }
+}
+
+function consoleComponentRoute (cmp) {
+  return {
+    render: (vnode) => {
+      return m(Console.Layout, { options }, m(Console[cmp], vnode.attrs))
+    }
+  }
+}
+
+const Layout = {
+  view (vnode) {
+    return [
+      m(SimpleHeader, { name: '' }),
+      m('div', vnode.children)
+    ]
+  }
+}
+
+function componentRoute (cmp) {
+  return {
+    render: (vnode) => {
+      return m(Layout, { options }, m(cmp, vnode.attrs))
+    }
   }
 }
 
@@ -444,6 +487,7 @@ m.route(root, '/', {
   '/z/:id/:slug': Article,
   '/chain/:chain': App,
   '/p/:page': PageApp,
+  '/u/:user': componentRoute(require('./components/UserDetail')),
   '/console': consoleComponentRoute('Dashboard'),
   '/console/new': consoleComponentRoute('Editor'),
   '/console/edit/:id': consoleComponentRoute('Editor')

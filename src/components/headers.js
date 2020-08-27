@@ -1,16 +1,6 @@
 const m = require('mithril')
 const blockies = require('ethereum-blockies-base64')
 
-function makeid (length = 4) {
-  var result = ''
-  var characters = '.abcdefghijklmnopqrstuvwz01234567890_!@#$%^&*()+<>{}~'
-  var charactersLength = characters.length
-  for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength))
-  }
-  return result
-}
-
 const SimpleHeader = {
   view (vnode) {
     return m('.h-12.items-center.flex.bg-gray-100.border.border-t-0.border-l-0.border-r-0', [

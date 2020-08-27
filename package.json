@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "parcel src/index.html",
-    "build": "rm -rf deploy_build && parcel build -d deploy_build src/index.html && echo 'bl0k.cz' > deploy_build/CNAME",
+    "build": "rm -rf deploy_build && parcel build -d deploy_build src/index.html && echo 'gh-mirror.bl0k.cz' > deploy_build/CNAME",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

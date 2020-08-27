@@ -1,8 +1,7 @@
-/* globals twttr, localStorage, web3, alert, ethereum */
+/* globals twttr, localStorage, web3, alert, ethereum, confirm, location */
 const m = require('mithril')
 const dateFns = require('date-fns')
 const qs = require('querystring')
-const marked = require('marked')
 
 const Console = require('./components/console')
 const { SimpleHeader, Logo, AuthPart } = require('./components/headers')
@@ -122,6 +121,17 @@ const bl0k = window.bl0k = {
     }
     return m.request(par)
   },
+  setPageDetail (input) {
+    const title = shortSentences(input.title, 68)
+    const desc = input.desc ? shortSentences(input.title, 165) : null
+
+    // apply
+    document.title = title + ' - bl0k.cz'
+    document.getElementsByTagName('meta')['twitter:title'].content = title
+    if (desc) {
+      document.getElementsByTagName('meta')['twitter:description'].content = desc
+    }
+  },
   initAuth () {
     const auth = localStorage.getItem('auth')
     if (auth) {
@@ -138,6 +148,22 @@ const bl0k = window.bl0k = {
 }
 
 bl0k.init()
+
+function shortSentences (str, max = 100) {
+  if (str.length < max) {
+    return str
+  }
+  const out = []
+  let count = 0
+  for (const s of str.split(' ')) {
+    count += s.length + 1
+    if (count > max) {
+      break
+    }
+    out.push(s)
+  }
+  return out.join(' ') + '..'
+}
 
 function formatDate (input) {
   const d = new Date(input)
@@ -194,11 +220,6 @@ function loadData (refresh = false) {
     }
     data.menu.push({ chainId: 'oth', chain: { name: 'Ostatní' } })
   })
-}
-
-function reload () {
-  loadData(true)
-  return false
 }
 
 const Header = {
@@ -437,8 +458,11 @@ const PageApp = {
 }
 
 function loadArticle (id) {
-  bl0k.request(`${options.apiUrl}/article/${id}`).then(out => {
+  window.bl0k.request(`${options.apiUrl}/article/${id}`).then(out => {
     data.article = out
+    window.bl0k.setPageDetail({
+      title: data.article.html.replace(/(<([^>]+)>)/gi, '')
+    })
     m.redraw()
 
     if (m.route.get() !== data.article.url) {
@@ -451,7 +475,7 @@ function loadArticle (id) {
   })
 }
 
-const ArticleData = {
+/* const ArticleData = {
   comment: '',
   setProperty: function (prop) {
     return (e) => {
@@ -459,7 +483,7 @@ const ArticleData = {
       return true
     }
   }
-}
+} */
 
 const Article = {
   oninit (vnode) {

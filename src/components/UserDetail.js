@@ -1,5 +1,4 @@
 const m = require('mithril')
-const blockies = require('ethereum-blockies-base64')
 const dateFns = require('date-fns')
 
 let user = null

@@ -55,10 +55,8 @@ const Message = {
 }
 
 let article = null
-let articleLoading = false
 
 function loadArticle (id) {
-  articleLoading = true
   window.bl0k.request(`${data.options.apiUrl}/article/${id}?compat=false`).then(out => {
     article = out
 
@@ -70,7 +68,6 @@ function loadArticle (id) {
       }
     }
 
-    articleLoading = false
     m.redraw()
   })
 }

@@ -61,6 +61,7 @@ const bl0k = window.bl0k = {
 
           localStorage.setItem('auth', JSON.stringify(out))
           window.bl0k.auth = out
+          window.bl0k.initAuth()
           m.redraw()
 
           const rt = m.route.get()
@@ -242,7 +243,7 @@ const DetailBox = {
   view (vnode) {
     const item = vnode.attrs.item
     const auth = window.bl0k.auth
-    const allowModify = auth && (auth.userId === item.author.id || auth.admin)
+    const allowModify = auth && (auth.userId === item.author.id || (auth.user && auth.user.admin))
 
     return m('.w-full.mt-5', [
       m('.text-sm.flex.w-full.h-auto.items-center', [

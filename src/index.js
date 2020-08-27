@@ -7,7 +7,10 @@ const Console = require('./components/console')
 const { SimpleHeader, Logo, AuthPart } = require('./components/headers')
 
 const options = {
-  apiUrl: 'https://api.bl0k.cz/1'
+  apiUrl: 'https://api.bl0k.cz/1',
+  title: 'bl0k.cz - Rychlé zprávy z kryptoměn',
+  titleSuffix: 'bl0k.cz',
+  desc: 'Komunitní zpravodajský server pro odbornou veřejnost zaměřený na krátké technologické zprávy ze světa kryptoměn.'
 }
 
 let opts = {}
@@ -122,11 +125,11 @@ const bl0k = window.bl0k = {
     return m.request(par)
   },
   setPageDetail (input) {
-    const title = shortSentences(input.title, 68)
+    const title = input.title ? shortSentences(input.title, 68) : null
     const desc = input.desc ? shortSentences(input.title, 165) : null
 
     // apply
-    document.title = title + ' - bl0k.cz'
+    document.title = (title ? (title + ' - ' + options.titleSuffix) : options.title)
     document.getElementsByTagName('meta')['twitter:title'].content = title
     if (desc) {
       document.getElementsByTagName('meta')['twitter:description'].content = desc
@@ -196,9 +199,14 @@ function loadData (refresh = false) {
   if (opts.chain) {
     query.chains = opts.chain
   }
-  bl0k.request(`${options.apiUrl}/bundle?${qs.stringify(query)}`).then(out => {
+  window.bl0k.request(`${options.apiUrl}/bundle?${qs.stringify(query)}`).then(out => {
     data = out
     dataLoading = false
+
+    window.bl0k.setPageDetail({
+      title: opts.chain && data.chains[opts.chain] ? data.chains[opts.chain].name : null
+    })
+
     m.redraw()
     setTimeout(() => {
       twttr.widgets.load()

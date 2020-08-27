@@ -1,21 +1,31 @@
 const m = require('mithril')
 const blockies = require('ethereum-blockies-base64')
 
+const AuthPart = {
+  view () {
+    const auth = window.bl0k.auth
+    if (!auth) {
+      return m('a.hover:underline', { onclick: window.bl0k.ethLogin, href: '#' }, 'Přihlásit')
+    }
+    const username = auth.username.length > 10
+      ? auth.username.substring(0, 6) + '...' + auth.username.substring(38)
+      : auth.username
+
+    return m('.flex.items-center', [
+      m('.w-6.h-6.mr-2.rounded', { style: `background: url(${blockies(window.bl0k.auth.username)}); background-size: 100% 100%;` }),
+      m('span', username),
+      m('a.ml-2.hover:underline', { onclick: window.bl0k.logout, href: '#' }, '(odhlásit)')
+    ])
+  }
+}
+
 const SimpleHeader = {
   view (vnode) {
     return m('.h-12.items-center.flex.bg-gray-100.border.border-t-0.border-l-0.border-r-0', [
       m('h1', m(Logo)),
       m('span.text-sm', vnode.attrs.name),
       m('span.pl-10.text-sm', m(m.route.Link, { class: 'hover:underline', href: '/' }, '← Zpět na zprávy')),
-      m('.h-12.absolute.top-0.right-0.flex.items-center.pr-5.text-sm', [
-        window.bl0k.auth
-          ? m('.flex.items-center', [
-            m('.w-6.h-6.mr-2.rounded', { style: `background: url(${blockies(window.bl0k.auth.username)}); background-size: 100% 100%;` }),
-            m('span', window.bl0k.auth.username.substring(0, 6) + '...' + window.bl0k.auth.username.substring(38)),
-            m('a.ml-2.hover:underline', { onclick: window.bl0k.logout, href: '#' }, '(odhlásit)')
-          ])
-          : m('a.hover:underline', { onclick: window.bl0k.ethLogin, href: '#' }, 'Přihlásit s Metamask')
-      ])
+      m('.h-12.absolute.top-0.right-0.flex.items-center.pr-5.text-sm', m(AuthPart))
     ])
   }
 }
@@ -52,5 +62,6 @@ const Logo = {
 
 module.exports = {
   SimpleHeader,
-  Logo
+  Logo,
+  AuthPart
 }

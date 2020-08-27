@@ -5,7 +5,7 @@ const qs = require('querystring')
 const marked = require('marked')
 
 const Console = require('./components/console')
-const { SimpleHeader, Logo } = require('./components/headers')
+const { SimpleHeader, Logo, AuthPart } = require('./components/headers')
 
 const options = {
   apiUrl: 'https://api.bl0k.cz/1'
@@ -62,6 +62,11 @@ const bl0k = window.bl0k = {
           localStorage.setItem('auth', JSON.stringify(out))
           window.bl0k.auth = out
           m.redraw()
+
+          const rt = m.route.get()
+          if (rt.match(/^\/chain/) || rt === '/') {
+            loadData(true)
+          }
         })
       })
     })
@@ -72,6 +77,24 @@ const bl0k = window.bl0k = {
     window.bl0k.auth = null
     m.redraw()
 
+    const rt = m.route.get()
+    if (rt.match(/^\/chain/) || rt === '/') {
+      loadData(true)
+    }
+
+    return false
+  },
+  deleteArticle (id, url) {
+    const q = confirm(`Opravdu smazat zprávu "${url}"?`)
+    if (!q) {
+      return false
+    }
+    window.bl0k.request({
+      method: 'DELETE',
+      url: `/article/${id}`
+    }).then(() => {
+      loadData(true)
+    })
     return false
   },
   request (props) {
@@ -175,7 +198,8 @@ const Header = {
         return m('.hidden.sm:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'mr-3 py-4 hover:underline' }, name))
       })),
       m('.absolute.top-0.right-0.h-12.flex.items-center.text-sm.pr-5', [
-        m(m.route.Link, { href: '/console/new', class: 'hover:underline' }, m.trust('Přidat novou zprávu'))
+        m(m.route.Link, { href: '/console/new', class: 'hover:underline' }, m.trust('Přidat novou zprávu')),
+        m('.ml-5', m(AuthPart))
         // m('div', m(m.route.Link, { href: '/p/o-nas', class: 'hover:underline' }, m.trust('Co je to bl0k?')))
       ])
       // m('p.text-sm', 'Rychlé zprávy z kryptoměn')
@@ -200,6 +224,7 @@ function selectItem (id) {
       return true
     }
     selected = (selected === id) ? null : id
+    console.log('Selected: ' + selected)
     return false
   }
 }
@@ -207,14 +232,18 @@ function selectItem (id) {
 const DetailBox = {
   view (vnode) {
     const item = vnode.attrs.item
+    const auth = window.bl0k.auth
+    const allowModify = auth && (auth.userId === item.author.id || auth.admin)
+
     return m('.w-full.mt-5', [
       m('.text-sm', [
         // m('span.text-xs', item.id),
         m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `@${item.author.username}`) : ''),
         m(m.route.Link, { class: 'ml-5 hover:underline', href: item.url }, 'Permalink'),
         // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
-        m(m.route.Link, { class: 'ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit'),
-        m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
+        allowModify ? m(m.route.Link, { class: 'ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit') : '',
+        allowModify ? m('a', { class: 'ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item.id, item.url) }, 'Smazat') : ''
+        // m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
       ])
     ])
   }
@@ -257,29 +286,6 @@ const ArticleContent = {
   }
 }
 
-const Feed = {
-  view: () => {
-    if (dataLoading) {
-      return m('.p-5', [
-        m('.ph-item > .ph-col-12', [
-          m('.ph-picture'),
-          m('.ph-row', [
-            m('.ph-col-6.big'),
-            m('.ph-col-4.empty.big')
-          ])
-        ])
-      ])
-    }
-    if (data.important.length === 0) {
-      return m('.p-5', 'Nenalezeny žádné zprávy.')
-    }
-    return data.important.map(i => {
-      return m('article.px-5.py-4.border.border-t-0.border-l-0.border-r-0.border-dashed',
-        { id: i.id, onclick: selectItem(`a:${i.id}`) }, m(ArticleContent, { item: i, important: true }))
-    })
-  }
-}
-
 const InfoPanel = {
   view () {
     return m('.p-5', [
@@ -300,19 +306,31 @@ const InfoPanel = {
   }
 }
 
-const FeedBig = {
-  view: () => {
+const Feed = {
+  view: (vnode) => {
+    const important = vnode.attrs.important
+    const maxi = vnode.attrs.maxi
     if (dataLoading) {
       return m('.p-5', 'Načítám obsah ...')
     }
     if (data.articles.length === 0) {
       return m('.p-5', 'Nenalezeny žádné zprávy.')
     }
+    const items = important ? data.important : data.articles
     return [
-      opts.chain ? '' : m(InfoPanel),
-      m('div', data.articles.map(i => {
-        return m('article.lg:flex.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed',
-          { id: i.id, onclick: selectItem(`ax:${i.id}`) }, m(ArticleContent, { item: i, maxi: true }))
+      (opts.chain || important || window.bl0k.auth) ? '' : m(InfoPanel),
+      m('div', items.map(i => {
+        const bg = ((type) => {
+          switch (type) {
+            case 'draft':
+              return 'bg-yellow-200'
+            case 'in-queue':
+              return 'bg-green-200'
+          }
+          return ''
+        })(i.type)
+        return m(`article.${important ? '' : 'lg:flex.'}.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed.${bg || ''}`,
+          { id: i.id, onclick: selectItem(`${maxi ? 'ax' : 'a'}:${i.id}`) }, m(ArticleContent, { item: i, maxi, important }))
       }))
     ]
   }
@@ -340,14 +358,14 @@ const App = {
         m('section.absolute.top-0.bottom-0.left-0.w-full.lg:w-4/6', [
           m('div.absolute.inset-0', [
             m('div.absolute.inset-0.overflow-hidden', [
-              m('div.absolute.inset-0.overflow-scroll.pb-10', m(FeedBig, vnode.attrs))
+              m('div.absolute.inset-0.overflow-scroll.pb-10', m(Feed, Object.assign({ maxi: true }, vnode.attrs)))
             ])
           ])
         ]),
         m('section.absolute.inset-y-0.right-0.bg-gray-200.hidden.lg:block.w-2/6.border.border-t-0.border-r-0.border-b-0', [
           m('h2.px-5.pt-3.pb-3.font-bold.text-lg.border.border-t-0.border-l-0.border-r-0.border-dashed', 'Důležité zprávy'),
           m('div.overflow-hidden.absolute.left-0.right-0.bottom-0', { style: 'top: 3.5rem;' }, [
-            m('div.overflow-scroll.absolute.inset-0.pb-10', m(Feed, vnode.attrs))
+            m('div.overflow-scroll.absolute.inset-0.pb-10', m(Feed, Object.assign({ important: true }, vnode.attrs)))
           ])
         ])
       ])
@@ -426,10 +444,10 @@ const Article = {
       m(SimpleHeader, { name: [m(m.route.Link, { href: `/z/${vnode.attrs.id}` }, m('pre.inline-block.ml-1.text-lg', vnode.attrs.id))] }),
       m({
         view () {
-          const links = data.article.links
           if (!data.article) {
             return m('.flex.w-full.justify-center.m-5', 'Loading ..')
           }
+          const links = data.article.links
           return m('.w-full.flex.justify-center', [
             m('.sm:w-4/6.m-5.sm:pt-5', [
               m('.mb-10', [

@@ -98,8 +98,9 @@ function saveArticle () {
     body: Message.toAPIObject()
 
   }).then(out => {
-    article = out
-    m.redraw()
+    // article = out
+    m.route.set(out.url)
+    // m.redraw()
   })
 
   return false
@@ -111,7 +112,7 @@ function articleDiff () {
   }
   const msg = Message.toAPIObject()
   for (const c of Object.keys(msg)) {
-    if (JSON.stringify(msg[c]) !== JSON.stringify(article[c])) {
+    if (JSON.stringify(msg[c]) !== JSON.stringify(article.data[c])) {
       return true
     }
   }
@@ -151,7 +152,9 @@ const Editor = {
     const tags = Message.tags.split(',').map(i => i.trim().toLowerCase()).map(i => `#${i}`)
     const diff = articleDiff()
 
-    const saveEnabled = (this.mode === 'edit' && diff) || (this.mode === 'create' && Message.text)
+    const auth = window.bl0k.auth
+
+    const saveEnabled = auth && ((this.mode === 'edit' && diff) || (this.mode === 'create' && Message.text))
 
     return [
       m('.flex.justify-center.pt-4.pb-10', [
@@ -161,9 +164,17 @@ const Editor = {
             m('label.block', [
               m('textarea.form-textarea.mt-1.block.w-full.font-mono.text-lg', { rows: 7, placeholder: 'Tady je místo pro vaši zprávu ..', oninput: Message.setProperty('text'), value: Message.text })
             ]),
+            m('.mt-2.mb-5.text-sm.text-gray-600', [
+              'Text je ve formátu ',
+              m('a.text-blue-700.hover:underline', { href: 'http://www.edgering.org/markdown/', target: '_blank' }, 'Markdown'),
+              '.'
+            ]),
             Message.text ? m('div', [
               m('.block.mt-5', [
-                m('span.text-gray-700', 'Relevantní blockchainy (podle důležitosti)'),
+                m('.inline.text-gray-700', [
+                  'Relevantní blockchainy',
+                  m('.inline.text-sm.ml-2', '- podle důležitosti, oddělené čárkou - např. "btc,eth"')
+                ]),
                 m('.flex.mt-2', [
                   m('input.form-input.block.w-2/6', { type: 'text', oninput: Message.setProperty('chains'), value: Message.chains }),
                   m('.w-4/6.pl-5.h-auto.items-center.flex', [
@@ -172,7 +183,10 @@ const Editor = {
                 ])
               ]),
               m('.block.mt-5', [
-                m('span.text-gray-700', 'Tagy (podle důležitosti)'),
+                m('.inline.text-gray-700', [
+                  'Tagy',
+                  m('.inline.text-sm.ml-2', '- podle důležitosti, oddělenné čárkou, např. "DeFi,burzy,parachain"')
+                ]),
                 m('.flex.mt-2', [
                   m('input.form-input.block.w-2/6', { type: 'text', oninput: Message.setProperty('tags'), value: Message.tags }),
                   m('.w-4/6.pl-5.h-auto.items-center.flex', [
@@ -190,7 +204,8 @@ const Editor = {
             m('.mt-5.flex', [
               // m('div', 'diff=' + diff),
               m(`button.bg-${saveEnabled ? 'blue-500' : 'gray-400.cursor-not-allowed'}${diff ? '.hover:bg-blue-700' : ''}.text-white.py-2.px-4.rounded`, { onclick: this.mode === 'create' ? createArticle : saveArticle, disabled: !saveEnabled ? 'disabled' : '' }, 'Uložit')
-            ])
+            ]),
+            auth ? '' : m('.mt-5.text-red-700', 'Pro vkládání a úpravu článků musíte být přihlášeni.')
           ])
           /* m('.mt-1', [
                 m('label', [

@@ -239,8 +239,8 @@ const ArticleContent = {
       ]),
       content: [
         m('.content', m.trust(i.html)),
-        (selected === `${this.maxi ? 'ax' : 'a'}:${i.id}` || this.standalone) ? m(`.pt-${this.standalone ? 2 : 0}`, m(DetailBox, { item: i })) : '',
-        i.embed && i.embed.tweet && embedAllowed ? m('div.flex.justify-center.mt-5', [m('.pt-0', m.trust(i.embed.tweet))]) : ''
+        i.embed && i.embed.tweet && embedAllowed ? m('div.flex.justify-center.mt-1', [m('.pt-0', m.trust(i.embed.tweet))]) : '',
+        (selected === `${this.maxi ? 'ax' : 'a'}:${i.id}` || this.standalone) ? m(`.pt-${this.standalone ? 2 : 0}`, m(DetailBox, { item: i })) : ''
       ]
     }
 
@@ -426,6 +426,7 @@ const Article = {
       m(SimpleHeader, { name: [m(m.route.Link, { href: `/z/${vnode.attrs.id}` }, m('pre.inline-block.ml-1.text-lg', vnode.attrs.id))] }),
       m({
         view () {
+          const links = data.article.links
           if (!data.article) {
             return m('.flex.w-full.justify-center.m-5', 'Loading ..')
           }
@@ -433,7 +434,13 @@ const Article = {
             m('.sm:w-4/6.m-5.sm:pt-5', [
               m('.mb-10', [
                 m('article.text-xl', m(ArticleContent, { item: data.article, standalone: true }))
-              ])
+              ]),
+              links.length > 0 ? m('.mb-5', [
+                m('h2.text-lg', 'Odkazy'),
+                m('.p-5', links.map(l => {
+                  return m('.mb-2', ['•', m('a.hover:underline.ml-3', { href: l.url, target: '_blank' }, l.url)])
+                }))
+              ]) : ''
               /* m('.mb-5', [
                 m('h2.text-2xl', 'Komentáře (0)'),
                 //m('.mt-5', 'Žádný komentář nenalezen'),

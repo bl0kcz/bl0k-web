@@ -13,6 +13,8 @@ const options = {
   desc: 'Komunitní zpravodajský server pro odbornou veřejnost zaměřený na krátké technologické zprávy ze světa kryptoměn.'
 }
 
+m.route.prefix = ''
+
 let opts = {}
 let dataLoading = false
 let data = {
@@ -495,14 +497,15 @@ function loadArticle (id) {
 
 const Article = {
   oninit (vnode) {
-    loadArticle(vnode.attrs.id)
+    this.id = '0x' + vnode.attrs.id
+    loadArticle(this.id)
   },
   onremove (vnode) {
     data.article = null
   },
   view (vnode) {
     return [
-      m(SimpleHeader, { name: [m(m.route.Link, { href: `/z/${vnode.attrs.id}` }, m('pre.inline-block.ml-1.text-lg', vnode.attrs.id))] }),
+      m(SimpleHeader, { name: [m(m.route.Link, { href: `/${this.id}` }, m('pre.inline-block.ml-1.text-lg', this.id))] }),
       m({
         view () {
           if (!data.article) {
@@ -569,8 +572,8 @@ function componentRoute (cmp) {
 const root = document.getElementById('app')
 m.route(root, '/', {
   '/': App,
-  '/z/:id': Article,
-  '/z/:id/:slug': Article,
+  '/0x:id': Article,
+  '/0x:id/:slug': Article,
   '/chain/:chain': App,
   '/p/:page': PageApp,
   '/u/:user': componentRoute(require('./components/UserDetail')),

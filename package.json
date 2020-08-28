@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "parcel src/index.html",
+    "start": "parcel -p 5678 --hmr-port 5679 --cert /corn/ssl/certificates/api.bl0k.cz.crt --key /corn/ssl/certificates/api.bl0k.cz.key src/index.html",
     "build": "rm -rf deploy_build && parcel build -d deploy_build src/index.html && echo 'gh-mirror.bl0k.cz' > deploy_build/CNAME",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

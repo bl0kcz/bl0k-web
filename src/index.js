@@ -520,7 +520,7 @@ const Article = {
               links.length > 0 ? m('.mb-5', [
                 m('h2.text-lg', 'Odkazy'),
                 m('.p-5', links.map(l => {
-                  return m('.mb-2', ['•', m('a.hover:underline.ml-3', { href: l.url, target: '_blank' }, l.url)])
+                  return m('.mb-2', ['•', m('a.hover:underline.ml-3', { href: l.surl, target: '_blank' }, l.url)])
                 }))
               ]) : ''
               /* m('.mb-5', [

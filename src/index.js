@@ -20,6 +20,7 @@ let dataLoading = false
 let data = {
   articles: [],
   article: null,
+  header: null,
   important: [],
   chains: {},
   menu: []
@@ -195,11 +196,15 @@ function loadData (refresh = false) {
   if (refresh) {
     data.articles = []
     data.important = []
+    data.header = null
     m.redraw()
   }
   const query = {}
   if (opts.chain) {
-    query.chains = opts.chain
+    query.chain = opts.chain
+  }
+  if (opts.tag) {
+    query.tag = opts.tag
   }
   window.bl0k.request(`${options.apiUrl}/bundle?${qs.stringify(query)}`).then(out => {
     data = out
@@ -247,7 +252,7 @@ const Header = {
         return m('.hidden.sm:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'mr-3 py-4 hover:underline' }, name))
       })),
       m('.absolute.top-0.right-0.h-12.flex.items-center.text-sm.pr-5', [
-        m(m.route.Link, { href: '/console/new', class: 'hover:underline' }, m.trust('Přidat novou zprávu')),
+        m(m.route.Link, { href: '/console/new', class: 'hover:underline hidden lg:inline-block' }, m.trust('Přidat novou zprávu')),
         m('.ml-5', m(AuthPart))
         // m('div', m(m.route.Link, { href: '/p/o-nas', class: 'hover:underline' }, m.trust('Co je to bl0k?')))
       ])
@@ -263,7 +268,7 @@ function chainTopic (chains, article = {}) {
 }
 
 function tagsTopic (tags, article = {}) {
-  return (article.standalone ? tags : tags.slice(0, 1)).map(t => m('.mr-2.inline', `#${t}`))
+  return (article.standalone ? tags : tags.slice(0, 1)).map(t => m(m.route.Link, { href: `/t/${t}`, class: 'hover:underline mr-2 inline' }, `#${t}`))
 }
 
 let selected = null
@@ -368,17 +373,17 @@ const InfoPanel = {
 
 const Feed = {
   view: (vnode) => {
-    const important = vnode.attrs.important
-    const maxi = vnode.attrs.maxi
     if (dataLoading) {
       return m('.p-5', 'Načítám obsah ...')
     }
-    if (data.articles.length === 0) {
+    const items = vnode.attrs.items
+    const important = vnode.attrs.important
+    const maxi = vnode.attrs.maxi
+    if (items.length === 0) {
       return m('.p-5', 'Nenalezeny žádné zprávy.')
     }
-    const items = important ? data.important : data.articles
     return [
-      (opts.chain || important || window.bl0k.auth) ? '' : m(InfoPanel),
+      (opts.chain || opts.tag || important || window.bl0k.auth) ? '' : m(InfoPanel),
       m('div', items.map(i => {
         const bg = ((type) => {
           switch (type) {
@@ -393,6 +398,28 @@ const Feed = {
           { id: i.id, onclick: selectItem(`${maxi ? 'ax' : 'a'}:${i.id}`) }, m(ArticleContent, { item: i, maxi, important }))
       }))
     ]
+  }
+}
+
+const FeedHeader = {
+  view (vnode) {
+    const h = vnode.attrs.data.header
+    if (!h) {
+      return null
+    }
+    return m('.bg-gray-200', [
+      m('.px-5.py-3.border.border-t-0.border-l-0.border-r-0', [
+        m('h2.text.font-semibold.text-md', h.data.title),
+        h.type === 'topic' ? [
+          /* h.data.tags ? m('.mt-2', [
+            m('.text-sm', [
+              'Tagy: ',
+              h.data.tags.map(t => `#${t}`).join(', ')
+            ])
+          ]) : '' */
+        ] : ''
+      ])
+    ])
   }
 }
 
@@ -418,14 +445,24 @@ const App = {
         m('section.absolute.top-0.bottom-0.left-0.w-full.lg:w-4/6', [
           m('div.absolute.inset-0', [
             m('div.absolute.inset-0.overflow-hidden', [
-              m('div.absolute.inset-0.overflow-scroll.pb-10', m(Feed, Object.assign({ maxi: true }, vnode.attrs)))
+              m('div.absolute.inset-0.overflow-scroll.pb-10', m({
+                view () {
+                  if (!data.articles) {
+                    return m('.m-5', 'Načítám obsah ...')
+                  }
+                  return [
+                    m(FeedHeader, { data, query: vnode.attrs }),
+                    m(Feed, { maxi: true, items: data.articles })
+                  ]
+                }
+              }))
             ])
           ])
         ]),
         m('section.absolute.inset-y-0.right-0.bg-gray-200.hidden.lg:block.w-2/6.border.border-t-0.border-r-0.border-b-0', [
           m('h2.px-5.pt-3.pb-3.font-bold.text-lg.border.border-t-0.border-l-0.border-r-0.border-dashed', 'Důležité zprávy'),
           m('div.overflow-hidden.absolute.left-0.right-0.bottom-0', { style: 'top: 3.5rem;' }, [
-            m('div.overflow-scroll.absolute.inset-0.pb-10', m(Feed, Object.assign({ important: true }, vnode.attrs)))
+            m('div.overflow-scroll.absolute.inset-0.pb-10', m(Feed, { important: true, items: data.important }))
           ])
         ])
       ])
@@ -520,7 +557,7 @@ const Article = {
               links.length > 0 ? m('.mb-5', [
                 m('h2.text-lg', 'Odkazy'),
                 m('.p-5', links.map(l => {
-                  return m('.mb-2', ['•', m('a.hover:underline.ml-3', { href: l.surl, target: '_blank' }, l.url)])
+                  return m('.mb-2.break-all', ['•', m('a.hover:underline.ml-3', { href: l.surl, target: '_blank' }, l.url)])
                 }))
               ]) : ''
               /* m('.mb-5', [
@@ -575,8 +612,10 @@ m.route(root, '/', {
   '/0x:id': Article,
   '/0x:id/:slug': Article,
   '/chain/:chain': App,
+  '/t/:tag': App,
   '/p/:page': PageApp,
   '/u/:user': componentRoute(require('./components/UserDetail')),
+  '/settings': componentRoute(require('./components/Settings')),
   '/console': consoleComponentRoute('Dashboard'),
   '/console/new': consoleComponentRoute('Editor'),
   '/console/edit/:id': consoleComponentRoute('Editor')

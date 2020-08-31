@@ -4,7 +4,7 @@ const AuthPart = {
   view () {
     const auth = window.bl0k.auth
     if (!auth) {
-      return m('a.hover:underline hidden md:inline', { onclick: window.bl0k.ethLogin, href: '#' }, 'Přihlásit')
+      return m('a.hover:underline', { onclick: window.bl0k.ethLogin, href: '#' }, 'Přihlásit')
     }
     const username = auth.username.length > 10
       ? auth.username.substring(0, 6) + '...' + auth.username.substring(38)

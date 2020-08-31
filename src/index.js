@@ -1,10 +1,10 @@
 /* globals twttr, localStorage, web3, alert, ethereum, confirm, location */
 const m = require('mithril')
-const dateFns = require('date-fns')
 const qs = require('querystring')
 
 const Console = require('./components/console')
 const { SimpleHeader, Logo, AuthPart } = require('./components/headers')
+const ArticleContent = require('./components/ArticleContent')
 
 const options = {
   apiUrl: 'https://api.bl0k.cz/1',
@@ -171,25 +171,6 @@ function shortSentences (str, max = 100) {
   return out.join(' ') + '..'
 }
 
-function formatDate (input) {
-  const d = new Date(input)
-  const time = dateFns.format(d, 'HH:mm')
-
-  let str = ''
-  if (dateFns.isToday(d)) {
-    str = time
-  } else if (dateFns.isYesterday(d)) {
-    str = `včera ${time}`
-  } else {
-    str = `${dateFns.format(d, 'd.M.')} ${time}`
-  }
-  return m('span', { title: dateFns.format(d, 'd.M.yyyy HH:mm') }, str)
-}
-
-function articleLink (item, text) {
-  return m(m.route.Link, { href: item.url, class: 'hover:underline' }, text)
-}
-
 function loadData (refresh = false) {
   dataLoading = true
   loadStatus.start('bundle')
@@ -261,16 +242,6 @@ const Header = {
   }
 }
 
-function chainTopic (chains, article = {}) {
-  return (article.standalone ? chains : chains.slice(0, 1)).map(chain => {
-    return m(m.route.Link, { href: `/chain/${chain.id}`, class: 'hover:underline mr-2 inline' }, chain.name)
-  })
-}
-
-function tagsTopic (tags, article = {}) {
-  return (article.standalone ? tags : tags.slice(0, 1)).map(t => m(m.route.Link, { href: `/t/${t}`, class: 'hover:underline mr-2 inline' }, `#${t}`))
-}
-
 let selected = null
 function selectItem (id) {
   return (e) => {
@@ -280,74 +251,6 @@ function selectItem (id) {
     selected = (selected === id) ? null : id
     console.log('Selected: ' + selected)
     return false
-  }
-}
-
-const DetailBox = {
-  view (vnode) {
-    const item = vnode.attrs.item
-    const auth = window.bl0k.auth
-    const admin = auth && (auth.user && auth.user.admin)
-    const allowModify = auth && (auth.userId === item.author.id || admin)
-
-    return m('.w-full.mt-5', [
-      m('.text-sm.flex.w-full.h-auto.items-center', [
-        // m('span.text-xs', item.id),
-        m(m.route.Link, { class: 'w-6 h-6 mr-3', href: `/u/${item.author.username}` }, m('.inline-block.h-full.w-full.rounded-full', { style: `background: url(${item.author.avatar}); background-size: 100% 100%;` })),
-        m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `${item.author.username}`) : ''),
-        vnode.attrs.standalone ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Permalink'),
-        // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
-        allowModify ? m(m.route.Link, { class: 'ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit') : '',
-        allowModify ? m('a', { class: 'ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item) }, 'Smazat') : '',
-        allowModify && item.type === 'draft' ? m('a', { class: 'ml-5 hover:underline text-green-700', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'in-queue') }, 'Do fronty') : '',
-        admin ? m('a', { class: 'ml-5 hover:underline text-green-700 font-semibold', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'public') }, 'Publikovat') : ''
-        // m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
-      ])
-    ])
-  }
-}
-
-const ArticleContent = {
-  oninit (vnode) {
-    this.item = vnode.attrs.item
-    this.important = vnode.attrs.important
-    this.maxi = vnode.attrs.maxi
-    this.standalone = vnode.attrs.standalone
-  },
-  view () {
-    const i = this.item
-    const embedAllowed = !this.important || i.importantEmbed === true
-    const types = {
-      'in-queue': { text: 've frontě', color: 'bg-green-300.text-green-700' },
-      draft: { text: 'koncept', color: 'bg-blue-300.text-blue-700' }
-    }
-    const typeBadge = i.type !== 'public' ? m('.inline-block.px-2.py-1.mb-2.mr-5.rounded-md.' + types[i.type].color, types[i.type].text) : ''
-
-    const parts = {
-      header: m(`div.font-bold.pb-${this.standalone ? 5 : 2}.text-sm`, [
-        typeBadge,
-        m('span', articleLink(i, formatDate(i.date))),
-        m('span.pl-3', chainTopic(i.chains, this)),
-        m('span.pl-3.font-normal.text-gray-700', tagsTopic(i.tags, this))
-      ]),
-      content: [
-        m('.content', m.trust(i.html)),
-        i.embed && i.embed.tweet && embedAllowed ? m('div.flex.justify-center.mt-1', [m('.pt-0', m.trust(i.embed.tweet))]) : '',
-        (selected === `${this.maxi ? 'ax' : 'a'}:${i.id}` || this.standalone || i.type !== 'public') ? m(`.pt-${this.standalone ? 2 : 0}`, m(DetailBox, { item: i, standalone: this.standalone })) : ''
-      ]
-    }
-
-    if (this.maxi) {
-      parts.header = m('.inline-block.lg:block.lg:w-1/6.text-sm.font-bold.leading-6.pr-2.pb-2.lg:pb-0', [
-        typeBadge,
-        m('.inline-block.lg:block', articleLink(i, formatDate(i.date))),
-        m('.inline-block.lg:block.pl-3.lg:pl-0', chainTopic(i.chains, this)),
-        m('.inline-block.lg:block.pl-3.lg:pl-0.font-normal.text-gray-700', tagsTopic(i.tags, this))
-      ])
-      parts.content = m('.inline-block.lg:block.lg:w-5/6', parts.content)
-    }
-
-    return [parts.header, parts.content]
   }
 }
 
@@ -395,7 +298,7 @@ const Feed = {
           return ''
         })(i.type)
         return m(`article.${important ? '' : 'lg:flex.'}.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed.${bg || ''}`,
-          { id: i.id, onclick: selectItem(`${maxi ? 'ax' : 'a'}:${i.id}`) }, m(ArticleContent, { item: i, maxi, important }))
+          { id: i.id, onclick: selectItem(`${maxi ? 'ax' : 'a'}:${i.id}`) }, m(ArticleContent, { item: i, maxi, important, selected }))
       }))
     ]
   }
@@ -504,83 +407,6 @@ const PageApp = {
   }
 }
 
-function loadArticle (id) {
-  window.bl0k.request(`${options.apiUrl}/article/${id}`).then(out => {
-    data.article = out
-    window.bl0k.setPageDetail({
-      title: data.article.html.replace(/(<([^>]+)>)/gi, '')
-    })
-    m.redraw()
-
-    if (m.route.get() !== data.article.url) {
-      m.route.set(data.article.url)
-      return null
-    }
-    setTimeout(() => {
-      twttr.widgets.load()
-    }, 100)
-  })
-}
-
-/* const ArticleData = {
-  comment: '',
-  setProperty: function (prop) {
-    return (e) => {
-      this[prop] = e.target.value
-      return true
-    }
-  }
-} */
-
-const Article = {
-  oninit (vnode) {
-    this.id = '0x' + vnode.attrs.id
-    loadArticle(this.id)
-  },
-  onremove (vnode) {
-    data.article = null
-  },
-  view (vnode) {
-    return [
-      m(SimpleHeader, { name: [m(m.route.Link, { href: `/${this.id}` }, m('pre.inline-block.ml-1.text-lg', this.id))] }),
-      m({
-        view () {
-          if (!data.article) {
-            return m('.flex.w-full.justify-center.m-5', 'Loading ..')
-          }
-          const links = data.article.links
-          return m('.w-full.flex.justify-center', [
-            m('.sm:w-4/6.m-5.sm:pt-5', [
-              m('.mb-10', [
-                m('article.text-xl', m(ArticleContent, { item: data.article, standalone: true }))
-              ]),
-              links.length > 0 ? m('.mb-5', [
-                m('h2.text-lg', 'Odkazy'),
-                m('.p-5', links.map(l => {
-                  return m('.mb-2.break-all', ['•', m('a.hover:underline.ml-3', { href: l.surl, target: '_blank' }, l.url)])
-                }))
-              ]) : ''
-              /* m('.mb-5', [
-                m('h2.text-2xl', 'Komentáře (0)'),
-                //m('.mt-5', 'Žádný komentář nenalezen'),
-                m('form.lg:flex.mt-5', { onsubmit: () => false }, [
-                  m('.w-4/6', [
-                    m('textarea.w-full.form-textarea.mr-2', { oninput: (e) => { ArticleData.comment = e.target.value; return false; }, value: ArticleData.comment, placeholder: 'Váš komentář ..' }),
-                  ]),
-                  m('.w-auto', [
-                    m('button.ml-2.bg-blue-500.hover:bg-blue-700.text-white.py-2.px-4.rounded.mr-2.text-md', 'Vložit komentář'),
-                  ]),
-                ]),
-                m('p', '@@' + ArticleData.comment),
-              ]) */
-            ])
-          ])
-        }
-      })
-    ]
-  }
-}
-
 function consoleComponentRoute (cmp) {
   return {
     render: (vnode) => {
@@ -609,8 +435,8 @@ function componentRoute (cmp) {
 const root = document.getElementById('app')
 m.route(root, '/', {
   '/': App,
-  '/0x:id': Article,
-  '/0x:id/:slug': Article,
+  '/0x:id': componentRoute(require('./components/Article')),
+  '/0x:id/:slug': componentRoute(require('./components/Article')),
   '/chain/:chain': App,
   '/t/:tag': App,
   '/p/:page': PageApp,

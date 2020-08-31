@@ -15,6 +15,7 @@
     "autoprefixer": "^9.8.6",
     "date-fns": "^2.15.0",
     "ethereum-blockies-base64": "^1.0.2",
+    "jsondiffpatch": "^0.4.1",
     "marked": "^1.1.1",
     "mithril": "^2.0.4",
     "parcel": "^1.12.4",

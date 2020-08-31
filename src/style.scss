@@ -6,12 +6,30 @@
 
 /*@import "../node_modules/placeholder-loading/src/scss/placeholder-loading";*/
 
-article .content a {
+@import "../node_modules/jsondiffpatch/dist/formatters-styles/annotated.css";
+@import "../node_modules/jsondiffpatch/dist/formatters-styles/html.css";
+
+article .content a:not(.bl0k-comments-link)  {
   color: #bd243d;
   font-weight: 600;
 }
 article .content strong {
   color: #333;
+}
+
+article .bl0k-article-control {
+  display: none;
+}
+
+article:hover .bl0k-article-control {
+  display: block;
+}
+
+.bl0k-comment .bl0k-comment-control {
+  display: none;
+}
+.bl0k-comment:hover .bl0k-comment-control {
+  display: block;
 }
 
 blockquote.twitter-tweet {

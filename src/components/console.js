@@ -200,7 +200,7 @@ const Editor = {
             ]) : '',
             m('.mt-5.flex', [
               // m('div', 'diff=' + diff),
-              m(`button.bg-${saveEnabled ? 'blue-500' : 'gray-400.cursor-not-allowed'}${diff ? '.hover:bg-blue-700' : ''}.text-white.py-2.px-4.rounded`, { onclick: this.mode === 'create' ? createArticle : saveArticle, disabled: !saveEnabled ? 'disabled' : '' }, this.mode === 'edit' ? 'Uložit' : 'Vytvořit koncept')
+              m(`button.bg-${saveEnabled ? 'blue-500.hover:bg-blue-700' : 'gray-400.cursor-not-allowed'}.text-white.py-2.px-4.rounded`, { onclick: this.mode === 'create' ? createArticle : saveArticle, disabled: !saveEnabled ? 'disabled' : '' }, this.mode === 'edit' ? 'Uložit' : 'Vytvořit koncept')
             ]),
             auth ? '' : m('.mt-5.text-red-700', 'Pro vkládání a úpravu článků musíte být přihlášeni.')
           ])

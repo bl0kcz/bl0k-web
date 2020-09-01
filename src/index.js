@@ -1,4 +1,4 @@
-/* globals twttr, localStorage, web3, alert, ethereum, confirm, location */
+/* globals twttr, localStorage, web3, alert, ethereum, confirm */
 const m = require('mithril')
 const qs = require('querystring')
 
@@ -80,8 +80,7 @@ const bl0k = window.bl0k = {
   },
   logout () {
     localStorage.removeItem('auth')
-    // window.bl0k.auth = null
-    location.reload()
+    document.location = '/'
     return false
   },
   deleteArticle (item) {

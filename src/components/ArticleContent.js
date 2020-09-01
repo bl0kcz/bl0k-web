@@ -69,7 +69,7 @@ module.exports = {
       } else if (i.comments.length > 4) {
         str = 'komentářů'
       }
-      htmlArr.push(m('.inline.ml-3.text-sm', ['💬 ', m(m.route.Link, { href: i.url, class: 'bl0k-comments-link hover:underline text-gray-700' }, `${i.comments.length} ${str}`)]))
+      htmlArr.push(m('.inline.ml-3.text-sm.whitespace-no-wrap', ['💬 ', m(m.route.Link, { href: i.url, class: 'bl0k-comments-link hover:underline text-gray-700' }, `${i.comments.length} ${str}`)]))
     }
 
     const parts = {

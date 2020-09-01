@@ -21,6 +21,11 @@ article .bl0k-article-control {
   display: none;
 }
 
+.prose hr { 
+  margin-top: 1.5em !important;
+  margin-bottom: 1.5em !important;
+}
+
 article:hover .bl0k-article-control {
   display: block;
 }

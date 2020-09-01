@@ -1,11 +1,17 @@
 const m = require('mithril')
 const dateFns = require('date-fns')
+const bl0k = window.bl0k
 
 let user = null
 
 function loadUser (id) {
-  window.bl0k.request(`/user/${id}`).then(out => {
+  bl0k.request(`/user/${id}`).then(out => {
     user = out
+
+    const un = '@' + user.username
+    bl0k.setPageDetail({
+      title: user.data.fullName ? `${user.data.fullName} (${un})` : un
+    })
     m.redraw()
   })
 }
@@ -24,16 +30,30 @@ module.exports = {
     if (!user) {
       return m('.m-5', 'Načítám obsah ..')
     }
-    return m('.m-5', [
+    return m('.m-5.pb-10', [
+      m('.flex.w-full.justify-center', [
+        m('.w-full.lg:w-4/6.lg:mt-5', [
+          m('.flex', [
+            m('.block', m('.w-32.h-32.rounded-full', { style: `background: url(${user.avatar}); background-size: 100% 100%;` })),
+            m('.block.ml-6', [
+              m('.mb-3', [
+                user.data.fullName ? m('.text-3xl', user.data.fullName) : '',
+                m('div', { title: user.id, class: user.data.fullName ? 'text-lg' : 'text-3xl' }, '@' + user.username)
+              ]),
+              !user.admin ? '' : m('.mt-1.font-bold.text', 'Administrátor 👑'),
+              // m('.mt-2.wrap-all', ['ID: ', m('span.font-mono.text-xl', user.id)]),
+              m('.mt-1', ['Členem od ', m('span', { title: user.created }, `${dateFns.format(new Date(user.created), 'd.M.yyyy')}`)]),
+              user.data.webUrl ? m('.mt-1', ['Web: ', m('a.hover:underline.text-red-700', { target: '_blank', href: user.data.webUrl }, user.data.webUrl)]) : '',
+              user.data.twitterUsername ? m('.mt-1', ['Twitter: ', m('a.hover:underline.text-red-700', { target: '_blank', href: `https://twitter.com/${user.data.twitterUsername}` }, '@' + user.data.twitterUsername)]) : ''
+            ])
+          ]),
+          !user.html ? '' : m('.mt-10.border.rounded.bg-gray-100', [
+            m('.prose.w-full.justify-center.p-5', { style: 'max-width: 100% !important;' }, m.trust(user.html))
+          ])
+        ])
+      ]),
       m('.flex.w-full.justify-center', [
         m('.flex.w-full.lg:w-4/6.lg:mt-5', [
-          m('.block', m('.w-32.h-32.rounded-full', { style: `background: url(${user.avatar}); background-size: 100% 100%;` })),
-          m('.block.ml-6', [
-            m('.text-3xl', user.username),
-            // m('.mt-2.wrap-all', ['ID: ', m('span.font-mono.text-xl', user.id)]),
-            m('.mt-2', `Uživatelem od ${dateFns.format(new Date(user.created), 'd.M.yyyy')}`),
-            user.twitter ? m('.mt-2', ['Twitter: ', m('a.hover:underline.text-red-700', { target: '_blank', href: `https://twitter.com/${user.twitter}` }, '@' + user.twitter)]) : ''
-          ])
         ])
       ])
     ])

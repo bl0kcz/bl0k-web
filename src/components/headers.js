@@ -1,4 +1,5 @@
 const m = require('mithril')
+const logoImage = require('../assets/images/logo-blok-2-cropped.png')
 
 const AuthPart = {
   view () {
@@ -71,7 +72,10 @@ const Logo = {
     }, 30) */
   },
   view (vnode) {
-    return m('span.mx-5.text-xl.pr-3.text-gray-700', m(m.route.Link, { href: '/', style: 'font-family: monospace;' }, this.text))
+    return m('.mx-5',
+      m(m.route.Link, { href: '/', style: 'font-family: monospace;' }, m('img.h-8', { src: logoImage }))
+    )
+    // return m('span.mx-5.text-xl.pr-3.text-gray-700', )
   }
 }
 

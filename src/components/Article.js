@@ -127,7 +127,7 @@ module.exports = {
             ])
           ]) : ''
         ]),
-        history && history.length < 1 ? '' : m('.block.mb-3.mt-3', [
+        (!history || history.length < 1) ? '' : m('.block.mb-3.mt-3', [
           m('h2.text-lg.flex.items-center', [
             `Historie úprav (${history.length})`,
             m('.text-sm.ml-5', [

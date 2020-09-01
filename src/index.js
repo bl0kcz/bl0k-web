@@ -10,7 +10,7 @@ const options = {
   apiUrl: 'https://api.bl0k.cz/1',
   title: 'bl0k.cz - Rychlé zprávy z kryptoměn',
   titleSuffix: 'bl0k.cz',
-  desc: 'Komunitní zpravodajský server pro odbornou veřejnost zaměřený na krátké technologické zprávy ze světa kryptoměn.'
+  desc: 'Komunitní zpravodajský server zaměřený na krátké technologické zprávy ze světa kryptoměn.'
 }
 
 m.route.prefix = ''
@@ -185,8 +185,11 @@ function loadData (refresh = false) {
     query.tag = opts.tag
   }
   window.bl0k.request(`${options.apiUrl}/bundle?${qs.stringify(query)}`).then(out => {
-    data = out
     dataLoading = false
+    if (!out) {
+      return null
+    }
+    data = out
 
     window.bl0k.setPageDetail({
       title: (out.header && out.header.data && (opts.chain || opts.tag)) ? out.header.data.title : null
@@ -259,7 +262,8 @@ const InfoPanel = {
         m('.flex', [
           m('.py-1', m('svg.fill-current.h-6.w-6.text-teal-500.mr-4', { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 20 20' }, m('path', { d: 'M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z' }))),
           m('div', [
-            m('p.font-bold', 'Vítejte na bl0k.cz!'),
+            m('p.text-2xl', 'Zkušební režim'),
+            // m('p.font-bold', 'Vítejte na bl0k.cz!'),
             m('p.text-sm', [
               // 'Toto je zkušební provoz. ',
               'Již brzy vám začneme přinášet aktuální zprávy z kryptoměn. ',
@@ -371,40 +375,6 @@ const App = {
   }
 }
 
-let page = null
-let pageId = null
-let pageLoading = false
-
-function loadPage () {
-  pageLoading = true
-  const query = { id: pageId }
-  bl0k.request(`${options.apiUrl}/page?${qs.stringify(query)}`).then(out => {
-    page = out
-    pageLoading = false
-    m.redraw()
-  })
-}
-
-const PageApp = {
-  oninit (vnode) {
-    pageId = vnode.attrs.page
-    loadPage()
-  },
-  view () {
-    return [
-      m(SimpleHeader, { name: pageId }),
-      m('.p-5.flex.w-full.justify-center', m({
-        view () {
-          if (!page || pageLoading) {
-            return m('div', 'Načítám stránku')
-          }
-          return m('.prose.mt-2.lg:w-4/6', m.trust(page.html))
-        }
-      }))
-    ]
-  }
-}
-
 function consoleComponentRoute (cmp) {
   return {
     render: (vnode) => {
@@ -433,15 +403,15 @@ function componentRoute (cmp) {
 const root = document.getElementById('app')
 m.route(root, '/', {
   '/': App,
-  '/:chain': App,
-  '/chain/:chain': App,
-  '/t/:tag': App,
   '/0x:id': componentRoute(require('./components/Article')),
   '/0x:id/:slug': componentRoute(require('./components/Article')),
-  '/p/:page': PageApp,
+  '/p/:page': componentRoute(require('./components/Page')),
   '/u/:user': componentRoute(require('./components/UserDetail')),
   '/settings': componentRoute(require('./components/Settings')),
   '/console': consoleComponentRoute('Dashboard'),
   '/console/new': consoleComponentRoute('Editor'),
-  '/console/edit/:id': consoleComponentRoute('Editor')
+  '/console/edit/:id': consoleComponentRoute('Editor'),
+  '/chain/:chain': App,
+  '/t/:tag': App,
+  '/:chain': App
 })

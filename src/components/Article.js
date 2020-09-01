@@ -103,11 +103,11 @@ module.exports = {
           m('.pt-3', data.article.comments.map(c => {
             const canModify = user && (c.author.id === user.id || user.admin)
 
-            return m('.my-2.md:mx-2.flex.bl0k-comment.w-full', [
+            return m('.my-2.md:mx-2.flex.bl0k-comment.w-full.md:mt-3', [
               m('.block', m('.w-8.h-8.mr-2.mt-2.rounded-full', { style: `background: url(${c.author.avatar}); background-size: 100% 100%;` })),
               m('.ml-2.w-full', [
                 m('.flex.items-center', [
-                  m('.inline.text-sm.font-bold', m(m.route.Link, { href: `/u/${c.author.username}`, class: 'hover:underline' }, c.author.username.substring(0, 10))),
+                  m('.inline.text-sm.font-bold', m(m.route.Link, { href: `/u/${c.author.username}`, class: 'hover:underline' }, c.author.username)),
                   m('.inline.ml-3.text-xs.text-gray-700', formatDate(c.created, true)),
                   !canModify ? '' : m('a.hover:underline.text-red-700.ml-3.text-xs.bl0k-comment-control', { onclick: deleteComment(c.id), href: '#' }, 'Smazat')
                 ]),
@@ -136,8 +136,9 @@ module.exports = {
           !this.showHistory ? '' : m('.pt-3', history.map(h => {
             const actions = {
               created: ['vytvořil ', m('span.text-blue-700.font-bold', 'koncept')],
-              updated: 'upravil tuto zprávu',
-              'status:in-queue': ['přesunul tuto zprávu do ', m('span.text-green-700.font-bold', 'fronty')]
+              updated: 'upravil zprávu',
+              'status:in-queue': ['přesunul zprávu do ', m('span.text-green-700.font-bold', 'fronty')],
+              'status:public': [m('span.text-red-700.font-bold', 'zveřejnil'), ' zprávu']
             }
 
             return m('.my-2.md:mx-2.mb-5', [

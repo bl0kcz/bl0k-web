@@ -36,6 +36,12 @@ article:hover .bl0k-article-control {
 .bl0k-comment:hover .bl0k-comment-control {
   display: block;
 }
+.bl0k-comment-content a {
+  color: #bd243d;
+}
+.bl0k-comment-content a:hover {
+  text-decoration: underline;
+}
 
 blockquote.twitter-tweet {
   display: inline-block;

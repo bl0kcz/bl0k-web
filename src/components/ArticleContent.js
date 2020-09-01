@@ -80,7 +80,7 @@ module.exports = {
         m('span.pl-3.font-normal.text-gray-700', tagsTopic(i.tags, this))
       ]),
       content: [
-        m('.content', m('p', htmlArr)),
+        m('.content', m('.break-words', htmlArr)),
         i.embed && i.embed.tweet && embedAllowed ? m('div.flex.justify-center.mt-1', [m('.pt-0', m.trust(i.embed.tweet))]) : '',
         (vnode.attrs.selected === `${this.maxi ? 'ax' : 'a'}:${i.id}` || this.standalone || i.type !== 'public') ? m(`.pt-${this.standalone ? 2 : 0}`, m(DetailBox, { item: i, standalone: this.standalone })) : ''
       ]

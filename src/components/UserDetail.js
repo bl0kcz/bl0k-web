@@ -5,12 +5,16 @@ const bl0k = window.bl0k
 let user = null
 
 function loadUser (id) {
+  user = null
+  m.redraw()
+
   bl0k.request(`/user/${id}`).then(out => {
     user = out
 
     const un = '@' + user.username
     bl0k.setPageDetail({
-      title: user.data.fullName ? `${user.data.fullName} (${un})` : un
+      title: user.data.fullName ? `${user.data.fullName} (${un})` : un,
+      desc: user.html.replace(/(<([^>]+)>)/gi, '')
     })
     m.redraw()
   })
@@ -26,6 +30,12 @@ module.exports = {
     user = null
   },
 
+  onupdate (vnode) {
+    if (user && (vnode.attrs.user !== user.username)) {
+      loadUser(vnode.attrs.user)
+    }
+  },
+
   view () {
     if (!user) {
       return m('.m-5', 'Načítám obsah ..')
@@ -36,13 +46,13 @@ module.exports = {
           m('.flex', [
             m('.block', m('.w-32.h-32.rounded-full', { style: `background: url(${user.avatar}); background-size: 100% 100%;` })),
             m('.block.ml-6', [
-              m('.mb-3', [
-                user.data.fullName ? m('.text-3xl', user.data.fullName) : '',
+              m('.mb-2.break-all', [
+                user.data.fullName ? m('.break-all', m('.text-3xl', user.data.fullName)) : '',
                 m('div', { title: user.id, class: user.data.fullName ? 'text-lg' : 'text-3xl' }, '@' + user.username)
               ]),
-              !user.admin ? '' : m('.mt-1.font-bold.text', 'Administrátor 👑'),
+              !user.admin ? '' : m('span.font-bold.text.px-2.py-1.w-auto.bg-red-200.text-red-700.rounded.text-sm', 'admin'),
               // m('.mt-2.wrap-all', ['ID: ', m('span.font-mono.text-xl', user.id)]),
-              m('.mt-1', ['Členem od ', m('span', { title: user.created }, `${dateFns.format(new Date(user.created), 'd.M.yyyy')}`)]),
+              m('.mt-2', ['Členem od ', m('span', { title: user.created }, `${dateFns.format(new Date(user.created), 'd.M.yyyy')}`)]),
               user.data.webUrl ? m('.mt-1', ['Web: ', m('a.hover:underline.text-red-700', { target: '_blank', href: user.data.webUrl }, user.data.webUrl)]) : '',
               user.data.twitterUsername ? m('.mt-1', ['Twitter: ', m('a.hover:underline.text-red-700', { target: '_blank', href: `https://twitter.com/${user.data.twitterUsername}` }, '@' + user.data.twitterUsername)]) : ''
             ])

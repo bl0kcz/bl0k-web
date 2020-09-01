@@ -128,14 +128,12 @@ const bl0k = window.bl0k = {
   },
   setPageDetail (input) {
     const title = input.title ? shortSentences(input.title, 68) : null
-    const desc = input.desc ? shortSentences(input.title, 165) : null
+    const desc = input.desc ? shortSentences(input.desc, 165) : null
 
     // apply
     document.title = (title ? (title + ' - ' + options.titleSuffix) : options.title)
     document.getElementsByTagName('meta')['twitter:title'].content = title
-    if (desc) {
-      document.getElementsByTagName('meta')['twitter:description'].content = desc
-    }
+    document.getElementsByTagName('meta')['twitter:description'].content = desc || options.desc
   },
   initAuth () {
     const auth = localStorage.getItem('auth')
@@ -190,9 +188,14 @@ function loadData (refresh = false) {
     data = out
     dataLoading = false
 
-    window.bl0k.setPageDetail({
-      title: opts.chain && data.chains[opts.chain] ? data.chains[opts.chain].name : null
-    })
+    let title = null
+    if (opts.chain && data.chains[opts.chain]) {
+      title = data.chains[opts.chain].name
+    }
+    if (opts.tag && out.header && out.header.data) {
+      title = out.header.data.title
+    }
+    window.bl0k.setPageDetail({ title })
 
     m.redraw()
     setTimeout(() => {

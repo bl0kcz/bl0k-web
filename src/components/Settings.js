@@ -23,6 +23,7 @@ module.exports = {
       url: '/me'
     }).then(out => {
       this.data.user = out
+      bl0k.setPageDetail({ title: 'Nastavení' })
       m.redraw()
     })
   },

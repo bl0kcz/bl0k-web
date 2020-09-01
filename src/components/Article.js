@@ -9,9 +9,8 @@ const data = {}
 function loadArticle (id) {
   window.bl0k.request(`/article/${id}?history=true`).then(out => {
     data.article = out
-    window.bl0k.setPageDetail({
-      title: data.article.html.replace(/(<([^>]+)>)/gi, '')
-    })
+    const text = data.article.html.replace(/(<([^>]+)>)/gi, '')
+    window.bl0k.setPageDetail({ title: text, desc: text })
     m.redraw()
 
     if (m.route.get() !== data.article.url) {
@@ -104,15 +103,15 @@ module.exports = {
           m('.pt-3', data.article.comments.map(c => {
             const canModify = user && (c.author.id === user.id || user.admin)
 
-            return m('.my-2.md:mx-2.flex.bl0k-comment', [
+            return m('.my-2.md:mx-2.flex.bl0k-comment.w-full', [
               m('.block', m('.w-8.h-8.mr-2.mt-2.rounded-full', { style: `background: url(${c.author.avatar}); background-size: 100% 100%;` })),
-              m('.ml-2', [
+              m('.ml-2.w-full', [
                 m('.flex.items-center', [
                   m('.inline.text-sm.font-bold', m(m.route.Link, { href: `/u/${c.author.username}`, class: 'hover:underline' }, c.author.username.substring(0, 10))),
                   m('.inline.ml-3.text-xs.text-gray-700', formatDate(c.created, true)),
                   !canModify ? '' : m('a.hover:underline.text-red-700.ml-3.text-xs.bl0k-comment-control', { onclick: deleteComment(c.id), href: '#' }, 'Smazat')
                 ]),
-                m('.break-all.mt-1', m.trust(c.html))
+                m('.mt-1.break-words.w-11/12.bl0k-comment-content', m.trust(c.html))
               ])
             ])
           })),

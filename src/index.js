@@ -188,14 +188,9 @@ function loadData (refresh = false) {
     data = out
     dataLoading = false
 
-    let title = null
-    if (opts.chain && data.chains[opts.chain]) {
-      title = data.chains[opts.chain].name
-    }
-    if (opts.tag && out.header && out.header.data) {
-      title = out.header.data.title
-    }
-    window.bl0k.setPageDetail({ title })
+    window.bl0k.setPageDetail({
+      title: (out.header && out.header.data && (opts.chain || opts.tag)) ? out.header.data.title : null
+    })
 
     m.redraw()
     setTimeout(() => {
@@ -214,7 +209,7 @@ function loadData (refresh = false) {
       if (!chain.major) {
         continue
       }
-      data.menu.push({ chainId, chain })
+      data.menu.push({ chainId: chainId, chain, url: `/${chain.name.toLowerCase()}` })
     }
     data.menu.push({ chainId: 'oth', chain: { name: 'Ostatní' } })
   })
@@ -229,7 +224,8 @@ const Header = {
         /* if (mi.chain.ico) {
           name = [ m(`i.pr-1.${mi.chain.ico}`, { style: 'font-family: cryptofont' } ), name ]
         } */
-        if (vnode.attrs.chain === mi.chainId || (mi.chainId === 'all' && !vnode.attrs.chain)) {
+        const selChain = vnode.attrs.chain
+        if ((selChain && (selChain === mi.chainId || selChain === name.toLowerCase())) || (mi.chainId === 'all' && !selChain)) {
           return m('span.underline.font-semibold.pr-3', name)
         }
         return m('.hidden.sm:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'mr-3 py-4 hover:underline' }, name))
@@ -309,7 +305,7 @@ const Feed = {
 const FeedHeader = {
   view (vnode) {
     const h = vnode.attrs.data.header
-    if (!h) {
+    if (!h || !h.data) {
       return null
     }
     return m('.bg-gray-200', [
@@ -437,10 +433,11 @@ function componentRoute (cmp) {
 const root = document.getElementById('app')
 m.route(root, '/', {
   '/': App,
-  '/0x:id': componentRoute(require('./components/Article')),
-  '/0x:id/:slug': componentRoute(require('./components/Article')),
+  '/:chain': App,
   '/chain/:chain': App,
   '/t/:tag': App,
+  '/0x:id': componentRoute(require('./components/Article')),
+  '/0x:id/:slug': componentRoute(require('./components/Article')),
   '/p/:page': PageApp,
   '/u/:user': componentRoute(require('./components/UserDetail')),
   '/settings': componentRoute(require('./components/Settings')),

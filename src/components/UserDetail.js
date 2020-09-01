@@ -42,7 +42,7 @@ module.exports = {
     }
     return m('.m-5.pb-10', [
       m('.flex.w-full.justify-center', [
-        m('.w-full.lg:w-4/6.lg:mt-5', [
+        m('.w-full.md:w-5/6.lg:w-4/6.md:mt-5', [
           m('.flex', [
             m('.block', m('.w-32.h-32.rounded-full', { style: `background: url(${user.avatar}); background-size: 100% 100%;` })),
             m('.block.ml-6', [
@@ -57,13 +57,9 @@ module.exports = {
               user.data.twitterUsername ? m('.mt-1', ['Twitter: ', m('a.hover:underline.text-red-700', { target: '_blank', href: `https://twitter.com/${user.data.twitterUsername}` }, '@' + user.data.twitterUsername)]) : ''
             ])
           ]),
-          !user.html ? '' : m('.mt-10.border.rounded.bg-gray-100', [
+          !user.html ? '' : m('.mt-5.md:mt-10.border.rounded.bg-gray-100', [
             m('.prose.w-full.justify-center.p-5', { style: 'max-width: 100% !important;' }, m.trust(user.html))
           ])
-        ])
-      ]),
-      m('.flex.w-full.justify-center', [
-        m('.flex.w-full.lg:w-4/6.lg:mt-5', [
         ])
       ])
     ])

@@ -32,8 +32,9 @@ const Layout = {
 
 const Message = {
   text: '',
-  tags: '',
   chains: '',
+  tags: '',
+  source: '',
   setProperty: function (prop) {
     return (e) => {
       this[prop] = e.target.value
@@ -43,14 +44,16 @@ const Message = {
   toAPIObject: function () {
     return {
       text: this.text,
+      chains: this.chains.split(',').map(i => i.trim()).filter(i => i),
       tags: this.tags.split(',').map(i => i.trim()).filter(i => i),
-      chains: this.chains.split(',').map(i => i.trim()).filter(i => i)
+      source: this.source
     }
   },
   reset: function () {
     this.text = ''
-    this.tags = ''
     this.chains = ''
+    this.tags = ''
+    this.source = ''
   }
 }
 
@@ -60,7 +63,7 @@ function loadArticle (id) {
   window.bl0k.request(`${data.options.apiUrl}/article/${id}?compat=false`).then(out => {
     article = out
 
-    for (const col of ['text', 'tags', 'chains', 'tags']) {
+    for (const col of ['text', 'tags', 'chains', 'source']) {
       if (col === 'chains' || col === 'tags') {
         Message[col] = article.data[col].join(',')
       } else {
@@ -191,6 +194,15 @@ const Editor = {
                   ])
                 ])
               ]),
+              m('.block.mt-5', [
+                m('.inline.text-gray-700', [
+                  'Zdroj',
+                  m('.inline.text-sm.ml-2', '- URL adresa zdroje, např. tweetu či článku')
+                ]),
+                m('.flex.mt-2', [
+                  m('input.form-input.block.w-full', { type: 'text', oninput: Message.setProperty('source'), value: Message.source })
+                ])
+              ]),
               m('h2.text-xl.pt-5.pb-2', 'Náhled'),
               m('.p-5.rounded-lg.border.border-gray-400.bg-white', [
                 m('article', [
@@ -200,7 +212,7 @@ const Editor = {
             ]) : '',
             m('.mt-5.flex', [
               // m('div', 'diff=' + diff),
-              m(`button.bg-${saveEnabled ? 'blue-500.hover:bg-blue-700' : 'gray-400.cursor-not-allowed'}.text-white.py-2.px-4.rounded`, { onclick: this.mode === 'create' ? createArticle : saveArticle, disabled: !saveEnabled ? 'disabled' : '' }, this.mode === 'edit' ? 'Uložit' : 'Vytvořit koncept')
+              m(`button.bg-${saveEnabled ? 'blue-500.hover:bg-blue-700' : 'gray-400.cursor-not-allowed'}.text-white.py-2.px-4.rounded.transition.duration-200.ease-in-out`, { onclick: this.mode === 'create' ? createArticle : saveArticle, disabled: !saveEnabled ? 'disabled' : '' }, this.mode === 'edit' ? 'Uložit' : 'Vytvořit koncept')
             ]),
             auth ? '' : m('.mt-5.text-red-700', 'Pro vkládání a úpravu článků musíte být přihlášeni.')
           ])

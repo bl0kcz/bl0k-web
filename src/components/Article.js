@@ -1,4 +1,4 @@
-/* globals twttr, confirm */
+/* globals confirm */
 const m = require('mithril')
 const ArticleContent = require('./ArticleContent')
 const { formatDate } = require('../lib/utils')
@@ -17,9 +17,6 @@ function loadArticle (id) {
       m.route.set(data.article.url)
       return null
     }
-    setTimeout(() => {
-      twttr.widgets.load()
-    }, 100)
   })
 }
 
@@ -102,6 +99,7 @@ module.exports = {
           m('h2.text-lg', `Komentáře (${data.article.comments.length})`),
           m('.pt-3', data.article.comments.map(c => {
             const canModify = user && (c.author.id === user.id || user.admin)
+            const html = window.bl0k.tooltipProcess(c.html)
 
             return m('.my-2.md:mx-2.flex.bl0k-comment.w-full.md:mt-3', [
               m('.block', m('.w-8.h-8.mr-2.mt-2.rounded-full', { style: `background: url(${c.author.avatar}); background-size: 100% 100%;` })),
@@ -111,7 +109,7 @@ module.exports = {
                   m('.inline.ml-3.text-xs.text-gray-700', formatDate(c.created, true)),
                   !canModify ? '' : m('a.hover:underline.text-red-700.ml-3.text-xs.bl0k-comment-control', { onclick: deleteComment(c.id), href: '#' }, 'Smazat')
                 ]),
-                m('.mt-1.break-words.w-11/12.bl0k-comment-content', m.trust(c.html))
+                m('.mt-1.break-words.w-11/12.bl0k-comment-content.bl0k-base-html', m.trust(html))
               ])
             ])
           })),

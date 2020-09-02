@@ -17,24 +17,24 @@ article .content strong {
   color: #333;
 }
 
-article .bl0k-article-control {
-  display: none;
-}
-
 .prose hr { 
   margin-top: 1.5em !important;
   margin-bottom: 1.5em !important;
 }
 
+.bl0k-comment .bl0k-comment-control,
+article .bl0k-article-control {
+  //display: none;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.5s linear;
+}
+.bl0k-comment:hover .bl0k-comment-control,
 article:hover .bl0k-article-control {
-  display: block;
-}
-
-.bl0k-comment .bl0k-comment-control {
-  display: none;
-}
-.bl0k-comment:hover .bl0k-comment-control {
-  display: block;
+  //display: block;
+  visibility: visible;
+  transition: visibility 0s, opacity 0.5s linear;
+  opacity: 1;
 }
 .bl0k-comment-content a {
   color: #bd243d;

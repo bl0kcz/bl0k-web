@@ -1,6 +1,8 @@
-/* globals twttr, localStorage, web3, alert, ethereum, confirm */
+/* globals localStorage, web3, alert, ethereum, confirm */
 const m = require('mithril')
 const qs = require('querystring')
+const $ = require('jquery')
+const currency = require('currency.js')
 
 const Console = require('./components/console')
 const { SimpleHeader, Logo, AuthPart } = require('./components/headers')
@@ -33,8 +35,57 @@ const loadStatus = {
   active: function () { return this.items.length > 0 }
 }
 
+const Tooltip = {
+  view (vnode) {
+    const tt = vnode.attrs.data
+    const style = `z-index: 1; top: ${tt.top || 0}px; left: ${tt.left || 0}px; width: 320px;`
+    return m('#bl0k-tooltip.absolute.border.py-1.px-2.bg-white.shadow.shadow-lg.rounded.transition-all.duration-300.ease-in-out', {
+      style,
+      onclick: () => {
+        window.bl0k.symbolTooltipHide()
+      }
+    }, tt.content)
+  }
+}
+
+const TokenTooltip = {
+  view (vnode) {
+    const d = vnode.attrs.data
+    return m('.w-auto', [
+      m('.flex', [
+        m('div.mt-1.h-full', [
+          m('.block', [
+            m('img.h-10', { src: d.image.large })
+          ])
+        ]),
+        m('div', [
+          m('.flex.items-center', [
+            m('.ml-2.text-lg.font-bold', d.name),
+            m('.ml-2', '(' + d.symbol.toUpperCase() + ')')
+          ]),
+          m('div', [
+            m('.ml-2', [
+              m('span.font-bold', '$' + d.market_data.current_price.usd),
+              m('span.ml-2.text-sm.text-gray-700', '(' + d.market_data.current_price.czk + ' Kč)'),
+              m('span.ml-2', { class: `text-md text-${d.market_data.price_change_24h > 0 ? 'green' : 'red'}-700` }, (d.market_data.price_change_24h > 0 ? '+' : '') + (Math.round(((d.market_data.price_change_24h) * 100)) / 100) + '%')
+            ])
+          ])
+        ])
+      ]),
+      // m('.mt-2.text-sm', d.description.en)
+      m('.mx-1.my-2.text-sm', [
+        // m('div', `Zásoba v oběhu: ${d.market_data.circulating_supply}`),
+        m('div', `Tržní kapitalizace: ${currency(d.market_data.market_cap.usd, { precision: 0 }).format()}`),
+        d.market_data.fully_diluted_valuation.usd ? m('div', `FDV: ${currency(d.market_data.fully_diluted_valuation.usd, { precision: 0 }).format()}`) : ''
+      ])
+    ])
+  }
+}
+
 const bl0k = window.bl0k = {
   auth: null,
+  tooltip: null,
+  tooltipLoading: false,
   ethLogin () {
     if (!window.ethereum) {
       alert('Nemáte nainstalovanou MetaMask!')
@@ -135,6 +186,44 @@ const bl0k = window.bl0k = {
     document.getElementsByTagName('meta')['twitter:title'].content = title
     document.getElementsByTagName('meta')['twitter:description'].content = desc || options.desc
   },
+  symbolTooltip (e, sym) {
+    if (this.tooltip) {
+      this.tooltip = null
+    }
+    this.tooltipLoading = true
+    const base = $(e).closest('.bl0k-base-html')
+    base.prepend('<div id="bl0k-tooltip-block" class="absolute left-0 top-0"></div>')
+
+    $(e).css('cursor', 'wait')
+    const te = $('#bl0k-tooltip-block').get(0)
+
+    const symbol = sym.match(/^\$(.+)$/)[1]
+    const rect = e.getBoundingClientRect()
+    const rectBase = base.get(0).getBoundingClientRect()
+    // console.log(rect, rectBase, e.offsetTop, e.offsetLeft)
+    const w = 320
+    this.request(`/symbol/${symbol}`).then(out => {
+      this.tooltipLoading = false
+      this.tooltip = {
+        content: m(TokenTooltip, { data: out }),
+        top: e.offsetTop + rect.height + 5,
+        left: (rect.left + w) > rectBase.right ? (e.offsetLeft - ((rect.left + w) - rectBase.right)) : e.offsetLeft - 5
+      }
+      $(e).css('cursor', 'help')
+      m.render(te, m(Tooltip, { data: this.tooltip }))
+      // m.redraw()
+    })
+    return false
+  },
+  symbolTooltipHide () {
+    this.tooltip = null
+    $('#bl0k-tooltip-block').remove()
+  },
+  tooltipProcess (html) {
+    return html.replace(/\$([\w\d]{3,10})/g, (m) => {
+      return `<span class="bl0k-symbol border border-t-0 border-l-0 border-r-0 border-gray-500 border-dotted" onmouseenter="bl0k.symbolTooltip(this, '${m}')" onmouseout="bl0k.symbolTooltipHide()" style="cursor: help;">${m}</span>`
+    })
+  },
   initAuth () {
     const auth = localStorage.getItem('auth')
     if (auth) {
@@ -196,9 +285,6 @@ function loadData (refresh = false) {
     })
 
     m.redraw()
-    setTimeout(() => {
-      twttr.widgets.load()
-    }, 100)
 
     setTimeout(() => {
       loadStatus.end('bundle')
@@ -246,7 +332,10 @@ const Header = {
 let selected = null
 function selectItem (id) {
   return (e) => {
-    if (e.target.nodeName === 'A') {
+    if (e.target.nodeName === 'A' || e.target.className.split(' ').includes('bl0k-symbol')) {
+      /* if ($('#bl0k-tooltip').get(0)) {
+        window.bl0k.symbolTooltipHide()
+      } */
       return true
     }
     selected = (selected === id) ? null : id
@@ -287,7 +376,7 @@ const Feed = {
     if (items.length === 0) {
       return m('.p-5', 'Nenalezeny žádné zprávy.')
     }
-    return [
+    return m('div', [
       (opts.chain || opts.tag || important || window.bl0k.auth) ? '' : m(InfoPanel),
       m('div', items.map(i => {
         const bg = ((type) => {
@@ -300,9 +389,9 @@ const Feed = {
           return ''
         })(i.type)
         return m(`article.${important ? '' : 'lg:flex.'}.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed.${bg || ''}`,
-          { id: i.id, onclick: selectItem(`${maxi ? 'ax' : 'a'}:${i.id}`) }, m(ArticleContent, { item: i, maxi, important, selected }))
+          { key: i.id, onclick: selectItem(`${maxi ? 'ax' : 'a'}:${i.id}`) }, m(ArticleContent, { item: i, maxi, important, selected }))
       }))
-    ]
+    ])
   }
 }
 
@@ -328,6 +417,18 @@ const FeedHeader = {
   }
 }
 
+const TwoPanesFeed = {
+  view (vnode) {
+    if (!data.articles) {
+      return m('.m-5', 'Načítám obsah ...')
+    }
+    return [
+      m(FeedHeader, { data, query: vnode.attrs }),
+      m(Feed, { maxi: true, items: data.articles })
+    ]
+  }
+}
+
 const App = {
   oninit: (vnode) => {
     opts = vnode.attrs
@@ -335,12 +436,13 @@ const App = {
   },
   onupdate: (vnode) => {
     if (JSON.stringify(opts) !== JSON.stringify(vnode.attrs)) {
+      console.log('x', opts, vnode.attrs)
       opts = vnode.attrs
       loadData(true)
     }
   },
   onremove: () => {
-    opts = {}
+    // opts = {}
     selected = null
   },
   view: (vnode) => {
@@ -350,17 +452,7 @@ const App = {
         m('section.absolute.top-0.bottom-0.left-0.w-full.lg:w-4/6', [
           m('div.absolute.inset-0', [
             m('div.absolute.inset-0.overflow-hidden', [
-              m('div.absolute.inset-0.overflow-scroll.pb-10', m({
-                view () {
-                  if (!data.articles) {
-                    return m('.m-5', 'Načítám obsah ...')
-                  }
-                  return [
-                    m(FeedHeader, { data, query: vnode.attrs }),
-                    m(Feed, { maxi: true, items: data.articles })
-                  ]
-                }
-              }))
+              m('div.absolute.inset-0.overflow-scroll.pb-10', m(TwoPanesFeed, vnode.attrs))
             ])
           ])
         ]),
@@ -392,17 +484,30 @@ const Layout = {
   }
 }
 
-function componentRoute (cmp) {
+const Core = {
+  view (vnode) {
+    return m('div', [
+      // bl0k.tooltip ? m(Tooltip, { data: bl0k.tooltip }) : '',
+      m('div', vnode.children)
+    ])
+  }
+}
+
+function componentRoute (cmp, layout = true) {
   return {
     render: (vnode) => {
-      return m(Layout, { options }, m(cmp, vnode.attrs))
+      let out = m(cmp, vnode.attrs)
+      if (layout) {
+        out = m(Layout, { options }, out)
+      }
+      return m(Core, out)
     }
   }
 }
 
 const root = document.getElementById('app')
 m.route(root, '/', {
-  '/': App,
+  '/': componentRoute(App, false),
   '/0x:id': componentRoute(require('./components/Article')),
   '/0x:id/:slug': componentRoute(require('./components/Article')),
   '/p/:page': componentRoute(require('./components/Page')),
@@ -411,7 +516,7 @@ m.route(root, '/', {
   '/console': consoleComponentRoute('Dashboard'),
   '/console/new': consoleComponentRoute('Editor'),
   '/console/edit/:id': consoleComponentRoute('Editor'),
-  '/chain/:chain': App,
-  '/t/:tag': App,
-  '/:chain': App
+  '/chain/:chain': componentRoute(App, false),
+  '/t/:tag': componentRoute(App, false),
+  '/:chain': componentRoute(App, false)
 })

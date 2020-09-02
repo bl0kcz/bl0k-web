@@ -1,3 +1,5 @@
+/* globals twttr */
+
 const m = require('mithril')
 const { formatDate } = require('../lib/utils')
 
@@ -39,6 +41,30 @@ const DetailBox = {
   }
 }
 
+const TwitterEmbed = {
+  oncreate (vnode) {
+    if (window.twttr && twttr.widgets) {
+      twttr.widgets.load(vnode.dom)
+    }
+  },
+  oninit (vnode) {
+    const embed = vnode.attrs.embed
+    this.html = m.trust(embed.html)
+  },
+  view (vnode) {
+    return m('.block', { style: 'max-width: 550px;' }, this.html)
+  }
+}
+
+const BaseHtml = {
+  oncreate (vnode) {
+    vnode.dom.innerHTML = vnode.attrs.text
+  },
+  view () {
+    return m('.bl0k-base-html')
+  }
+}
+
 module.exports = {
   oninit (vnode) {
     this.item = vnode.attrs.item
@@ -48,19 +74,21 @@ module.exports = {
   },
   view (vnode) {
     const i = this.item
-    const embedAllowed = !this.important || i.importantEmbed === true
+    // const embedAllowed = !this.important || i.importantEmbed === true
     const types = {
       'in-queue': { text: 've frontě', color: 'bg-green-300.text-green-700' },
       draft: { text: 'koncept', color: 'bg-blue-300.text-blue-700' }
     }
     const typeBadge = i.type !== 'public' ? m('.inline-block.px-2.py-1.mb-2.mr-5.rounded-md.' + types[i.type].color, types[i.type].text) : ''
 
-    let baseHtml = i.html.trim().match(/^<p>([\s\S]*?)<\/p>$/m)
+    let baseHtml = i.html.trim().match(/^<p>([\s\S]*?)<\/p>$/m)[1]
+    baseHtml = window.bl0k.tooltipProcess(baseHtml)
+
     if (!baseHtml) {
       console.error(`corrupted html: ${i.id}, html: "${i.html}"`)
-      baseHtml = ['', 'n/a']
+      baseHtml = 'n/a'
     }
-    const htmlArr = [m.trust(baseHtml[1])]
+    const htmlArr = [m(BaseHtml, { text: baseHtml })]
 
     if (i.comments.length > 0 && !this.standalone) {
       let str = 'komenáře'
@@ -81,7 +109,12 @@ module.exports = {
       ]),
       content: [
         m('.content', m('.break-words', htmlArr)),
-        i.embed && i.embed.tweet && embedAllowed ? m('div.flex.justify-center.mt-1', [m('.pt-0', m.trust(i.embed.tweet))]) : '',
+        m('.flex.justify-center', i.embeds.map(embed => {
+          if (embed.type === 'twitter') {
+            return m(TwitterEmbed, { embed })
+          }
+        })),
+        // i.embed && i.embed.tweet && embedAllowed ? m('div.flex.justify-center.mt-1', [m('.pt-0', m.trust(i.embed.tweet))]) : '',
         (vnode.attrs.selected === `${this.maxi ? 'ax' : 'a'}:${i.id}` || this.standalone || i.type !== 'public') ? m(`.pt-${this.standalone ? 2 : 0}`, m(DetailBox, { item: i, standalone: this.standalone })) : ''
       ]
     }

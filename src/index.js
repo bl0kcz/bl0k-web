@@ -51,6 +51,9 @@ const Tooltip = {
 const TokenTooltip = {
   view (vnode) {
     const d = vnode.attrs.data
+    if (!d) {
+      return m('div', 'Token nenalezen')
+    }
     return m('.w-auto', [
       m('.flex', [
         m('div.mt-1.h-full', [
@@ -270,8 +273,8 @@ function loadData (refresh = false) {
   if (opts.chain) {
     query.chain = opts.chain
   }
-  if (opts.tag) {
-    query.tag = opts.tag
+  if (opts.topic) {
+    query.tag = opts.topic
   }
   window.bl0k.request(`${options.apiUrl}/bundle?${qs.stringify(query)}`).then(out => {
     dataLoading = false
@@ -281,7 +284,7 @@ function loadData (refresh = false) {
     data = out
 
     window.bl0k.setPageDetail({
-      title: (out.header && out.header.data && (opts.chain || opts.tag)) ? out.header.data.title : null
+      title: (out.header && out.header.data && (opts.chain || opts.topic)) ? out.header.data.title : null
     })
 
     m.redraw()
@@ -377,7 +380,7 @@ const Feed = {
       return m('.p-5', 'Nenalezeny žádné zprávy.')
     }
     return m('div', [
-      (opts.chain || opts.tag || important || window.bl0k.auth) ? '' : m(InfoPanel),
+      (opts.chain || opts.topic || important || window.bl0k.auth) ? '' : m(InfoPanel),
       m('div', items.map(i => {
         const bg = ((type) => {
           switch (type) {
@@ -435,6 +438,7 @@ const App = {
     loadData()
   },
   onupdate: (vnode) => {
+    console.log('@', JSON.stringify(opts), JSON.stringify(vnode.attrs))
     if (JSON.stringify(opts) !== JSON.stringify(vnode.attrs)) {
       console.log('x', opts, vnode.attrs)
       opts = vnode.attrs
@@ -442,7 +446,7 @@ const App = {
     }
   },
   onremove: () => {
-    // opts = {}
+    opts = {}
     selected = null
   },
   view: (vnode) => {
@@ -508,6 +512,8 @@ function componentRoute (cmp, layout = true) {
 const root = document.getElementById('app')
 m.route(root, '/', {
   '/': componentRoute(App, false),
+  '/chain/:chain': componentRoute(App, false),
+  '/t/:topic': componentRoute(App, false),
   '/0x:id': componentRoute(require('./components/Article')),
   '/0x:id/:slug': componentRoute(require('./components/Article')),
   '/p/:page': componentRoute(require('./components/Page')),
@@ -516,7 +522,5 @@ m.route(root, '/', {
   '/console': consoleComponentRoute('Dashboard'),
   '/console/new': consoleComponentRoute('Editor'),
   '/console/edit/:id': consoleComponentRoute('Editor'),
-  '/chain/:chain': componentRoute(App, false),
-  '/t/:tag': componentRoute(App, false),
   '/:chain': componentRoute(App, false)
 })

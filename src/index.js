@@ -311,6 +311,13 @@ function loadData (refresh = false) {
       data.menu.push({ chainId: chainId, chain, url: `/${chain.name.toLowerCase()}` })
     }
     data.menu.push({ chainId: 'oth', chain: { name: 'Ostatní' } })
+
+    const topics = [
+      ['DeFi']
+    ]
+    for (const t of topics) {
+      data.menu.push({ url: `/t/${t[0]}`, title: '#' + (t[1] || t[0]) })
+    }
   })
 }
 
@@ -319,7 +326,7 @@ const Header = {
     return [
       m('h1', m(Logo, { loadStatus })),
       m('.text-sm', data.menu.map(mi => {
-        const name = mi.chain.name
+        const name = mi.title || mi.chain.name
         /* if (mi.chain.ico) {
           name = [ m(`i.pr-1.${mi.chain.ico}`, { style: 'font-family: cryptofont' } ), name ]
         } */

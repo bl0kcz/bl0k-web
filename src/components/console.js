@@ -167,7 +167,8 @@ const Editor = {
             m('.mt-2.mb-5.text-sm.text-gray-600', [
               'Text je ve formátu ',
               m('a.text-blue-700.hover:underline', { href: 'http://www.edgering.org/markdown/', target: '_blank' }, 'Markdown'),
-              '.'
+              '. Základní formátování: ',
+              m('span.font-mono.text-lg', '**tučně**, *kurzíva*, [odkaz](http://example.org)')
             ]),
             Message.text ? m('div', [
               m('.block.mt-5', [

@@ -40,11 +40,11 @@ const DetailBox = {
           admin && item.type !== 'public' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline hover:text-green-900 text-green-700 font-semibold', title: 'Publikovat', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'public') }, [m('i.fas.fa-check-double'), std || item.type === 'in-queue' ? m('span.ml-2', 'Publikovat') : '']) : ''
           // m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
         ]),
-        m('.flex.w-2/6.h-auto.items-center.justify-end.text-white.text-md', [
+        item.type === 'public' ? m('.flex.w-2/6.h-auto.items-center.justify-end.text-white.text-md', [
           m('a.w-10.h-10.flex.items-center.justify-center.bg-gray-500.hover:bg-gray-600', { href: fullUrl, target: '_blank' }, m('.fas.fa-link.bl0k-no-click')),
           m('a.w-10.h-10.flex.items-center.justify-center.bg-fb.hover:bg-fb-dark.ml-1', { href: 'http://www.facebook.com/sharer/sharer.php?u=' + fullUrl, target: '_blank' }, m('.fab.fa-facebook-f.bl0k-no-click')),
           m('a.w-10.h-10.flex.items-center.justify-center.bg-tw.hover:bg-tw-dark.ml-1', { href: 'http://www.twitter.com/share?url=' + fullUrl, target: '_blank' }, m('.fab.fa-twitter.bl0k-no-click'))
-        ])
+        ]) : ''
       ])
     ])
   }

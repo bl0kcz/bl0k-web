@@ -186,8 +186,8 @@ const bl0k = window.bl0k = {
 
     // apply
     document.title = (title ? (title + ' - ' + options.titleSuffix) : options.title)
-    document.getElementsByTagName('meta')['twitter:title'].content = title
-    document.getElementsByTagName('meta')['twitter:description'].content = desc || options.desc
+    document.getElementsByTagName('meta')['og:title'].content = title
+    document.getElementsByTagName('meta')['og:description'].content = desc || options.desc
   },
   symbolTooltip (e, sym) {
     if (this.tooltip) {

@@ -85,7 +85,7 @@ module.exports = {
 
     return m('.w-full.flex.justify-center.mb-10', [
       m('.w-full.md:w-5/6.lg:w-4/6.p-5.sm:mt-5', [
-        m('.mb-8', [
+        m('.mb-8.p-3.lg:p-5.border.rounded', [
           m('article.text-xl', m(ArticleContent, { item: data.article, standalone: true }))
         ]),
         /* links.length > 0 ? m('.block', [
@@ -95,7 +95,7 @@ module.exports = {
           }))
         ]) : '', */
 
-        data.article.comments.length < 1 && !user ? '' : m('.mb-5', [
+        (data.article.comments.length < 1 && !user) || (data.article.type === 'draft') ? '' : m('.mb-5', [
           m('h2.text-lg', `Komentáře (${data.article.comments.length})`),
           m('.pt-3', data.article.comments.map(c => {
             const canModify = user && (c.author.id === user.id || user.admin)
@@ -133,10 +133,10 @@ module.exports = {
           ]),
           !this.showHistory ? '' : m('.pt-3', history.map(h => {
             const actions = {
-              created: ['vytvořil ', m('span.text-blue-700.font-bold', 'koncept')],
+              created: ['vytvořil ', m('span.text-orange-700.font-bold', 'koncept')],
               updated: 'upravil zprávu',
-              'status:in-queue': ['přesunul zprávu do ', m('span.text-green-700.font-bold', 'fronty')],
-              'status:public': [m('span.text-red-700.font-bold', 'zveřejnil'), ' zprávu']
+              'status:in-queue': ['přesunul zprávu do ', m('span.text-blue-700.font-bold', 'fronty')],
+              'status:public': [m('span.text-green-700.font-bold', 'zveřejnil'), ' zprávu']
             }
 
             return m('.my-2.md:mx-2.mb-5', [

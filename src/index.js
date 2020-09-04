@@ -396,7 +396,7 @@ const Feed = {
         const bg = ((type) => {
           switch (type) {
             case 'draft':
-              return 'bg-blue-200'
+              return 'bg-orange-200'
             case 'in-queue':
               return 'bg-green-200'
           }

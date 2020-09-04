@@ -9,12 +9,16 @@
 @import "../node_modules/jsondiffpatch/dist/formatters-styles/annotated.css";
 @import "../node_modules/jsondiffpatch/dist/formatters-styles/html.css";
 
-article .content a:not(.bl0k-comments-link)  {
+article .content a:not(.bl0k-comments-link) {
   color: #bd243d;
   font-weight: 600;
 }
 article .content strong {
   color: #333;
+}
+
+article .content .bl0k-article-source {
+  font-weight: normal !important;
 }
 
 .prose hr { 

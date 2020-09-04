@@ -50,6 +50,9 @@ const TwitterEmbed = {
   oninit (vnode) {
     const embed = vnode.attrs.embed
     this.html = m.trust(embed.html)
+
+    // const tid = embed.meta.url.match(/\/(\d+)\/?$/)[1]
+    // this.iframeUrl = `https://platform.twitter.com/embed/index.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id=${tid}&lang=cs&origin=https%3A%2F%2Fbl0k.cz%2F&siteScreenName=bl0kcz&theme=light&widgetsVersion=219d021%3A1598982042171&width=550px`
   },
   view (vnode) {
     return m('.block', { style: 'max-width: 550px;' }, this.html)
@@ -71,24 +74,29 @@ module.exports = {
     this.important = vnode.attrs.important
     this.maxi = vnode.attrs.maxi
     this.standalone = vnode.attrs.standalone
-  },
-  view (vnode) {
+
     const i = this.item
-    // const embedAllowed = !this.important || i.importantEmbed === true
     const types = {
       'in-queue': { text: 've frontě', color: 'bg-green-300.text-green-700' },
       draft: { text: 'koncept', color: 'bg-blue-300.text-blue-700' }
     }
-    const typeBadge = i.type !== 'public' ? m('.inline-block.px-2.py-1.mb-2.mr-5.rounded-md.' + types[i.type].color, types[i.type].text) : ''
+    this.typeBadge = i.type !== 'public' ? m('.inline-block.px-2.py-1.mb-2.mr-5.rounded-md.' + types[i.type].color, types[i.type].text) : ''
 
     let baseHtml = i.html.trim().match(/^<p>([\s\S]*?)<\/p>$/m)[1]
     baseHtml = window.bl0k.tooltipProcess(baseHtml)
+
+    for (const s of i.sources) {
+      if (i.embeds && i.embeds[0] && i.embeds[0].meta.url === s.url) {
+        continue
+      }
+      baseHtml += ` (<a class="bl0k-article-source" target="_blank" href="${s.url}">${s.name}</a>)`
+    }
 
     if (!baseHtml) {
       console.error(`corrupted html: ${i.id}, html: "${i.html}"`)
       baseHtml = 'n/a'
     }
-    const htmlArr = [m(BaseHtml, { text: baseHtml })]
+    this.htmlArr = [m(BaseHtml, { text: baseHtml })]
 
     if (i.comments.length > 0 && !this.standalone) {
       let str = 'komenáře'
@@ -97,18 +105,22 @@ module.exports = {
       } else if (i.comments.length > 4) {
         str = 'komentářů'
       }
-      htmlArr.push(m('.inline.ml-3.text-sm.whitespace-no-wrap', ['💬 ', m(m.route.Link, { href: i.url, class: 'bl0k-comments-link hover:underline text-gray-700' }, `${i.comments.length} ${str}`)]))
+      this.htmlArr.push(m('.inline.ml-3.text-sm.whitespace-no-wrap', ['💬 ', m(m.route.Link, { href: i.url, class: 'bl0k-comments-link hover:underline text-gray-700' }, `${i.comments.length} ${str}`)]))
     }
+  },
+  view (vnode) {
+    const i = this.item
+    // const embedAllowed = !this.important || i.importantEmbed === true
 
     const parts = {
       header: m(`div.font-bold.pb-${this.standalone ? 5 : 2}.text-sm.flex`, [
-        typeBadge,
+        this.typeBadge,
         m('span', articleLink(i, formatDate(i.date))),
         m('span.pl-3', chainTopic(i.chains, this)),
         m('span.pl-3.font-normal.text-gray-700', tagsTopic(i.tags, this))
       ]),
       content: [
-        m('.content', m('.break-words', htmlArr)),
+        m('.content', m('.break-words', this.htmlArr)),
         m('.flex.justify-center', i.embeds.map(embed => {
           if (embed.type === 'twitter') {
             return m(TwitterEmbed, { embed })
@@ -121,7 +133,7 @@ module.exports = {
 
     if (this.maxi) {
       parts.header = m('.inline-block.lg:block.lg:w-1/6.text-sm.font-bold.leading-6.pr-2.pb-2.lg:pb-0', [
-        typeBadge,
+        this.typeBadge,
         m('.inline-block.lg:block', articleLink(i, formatDate(i.date))),
         m('.inline-block.lg:block.pl-3.lg:pl-0', chainTopic(i.chains, this)),
         m('.inline-block.lg:block.pl-3.lg:pl-0.font-normal.text-gray-700', tagsTopic(i.tags, this))

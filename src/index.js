@@ -68,8 +68,8 @@ const TokenTooltip = {
           ]),
           m('div', [
             m('.ml-2', [
-              m('span.font-bold', '$' + d.market_data.current_price.usd),
-              m('span.ml-2.text-sm.text-gray-700', '(' + d.market_data.current_price.czk + ' Kč)'),
+              m('span.font-bold', bl0k.formatAmount(d.market_data.current_price.usd)),
+              m('span.ml-2.text-sm.text-gray-700', '(' + bl0k.formatAmount(d.market_data.current_price.czk, 2, 'czk') + ')'),
               m('span.ml-2', { class: `text-md text-${d.market_data.price_change_24h > 0 ? 'green' : 'red'}-700` }, (d.market_data.price_change_24h > 0 ? '+' : '') + (Math.round(((d.market_data.price_change_24h) * 100)) / 100) + '%')
             ])
           ])
@@ -78,8 +78,8 @@ const TokenTooltip = {
       // m('.mt-2.text-sm', d.description.en)
       m('.mx-1.my-2.text-sm', [
         // m('div', `Zásoba v oběhu: ${d.market_data.circulating_supply}`),
-        m('div', `Tržní kapitalizace: ${currency(d.market_data.market_cap.usd, { precision: 0 }).format()}`),
-        d.market_data.fully_diluted_valuation.usd ? m('div', `FDV: ${currency(d.market_data.fully_diluted_valuation.usd, { precision: 0 }).format()}`) : ''
+        m('div', `Tržní kapitalizace: ${bl0k.formatAmount(d.market_data.market_cap.usd, 0)}`),
+        d.market_data.fully_diluted_valuation.usd ? m('div', `FDV: ${bl0k.formatAmount(d.market_data.fully_diluted_valuation.usd)}`) : ''
       ])
     ])
   }
@@ -239,6 +239,13 @@ const bl0k = window.bl0k = {
   },
   init () {
     this.initAuth()
+  },
+  formatAmount (amount, precision = 2, preset = 'usd') {
+    const presets = {
+      usd: { separator: ' ', decimal: ',', pattern: '# !', symbol: ' $' },
+      czk: { separator: ' ', decimal: ',', pattern: '# !', symbol: ' Kč' }
+    }
+    return currency(amount, Object.assign({}, presets[preset], { precision })).format()
   }
 }
 

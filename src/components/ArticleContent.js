@@ -23,19 +23,27 @@ const DetailBox = {
     const auth = window.bl0k.auth
     const admin = auth && (auth.user && auth.user.admin)
     const allowModify = auth && (auth.userId === item.author.id || admin)
+    const fullUrl = 'https://bl0k.cz' + item.url
 
     return m('.w-full.mt-5', [
       m('.text-sm.flex.w-full.h-auto.items-center', [
-        // m('span.text-xs', item.id),
-        m(m.route.Link, { class: 'w-6 h-6 mr-3', href: `/u/${item.author.username}` }, m('.inline-block.h-full.w-full.rounded-full', { style: `background: url(${item.author.avatar}); background-size: 100% 100%;` })),
-        m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `${item.author.username}`) : ''),
-        vnode.attrs.standalone ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Permalink'),
-        // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
-        allowModify ? m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit') : '',
-        allowModify ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item) }, 'Smazat') : '',
-        allowModify && item.type === 'draft' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-green-700', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'in-queue') }, 'Do fronty') : '',
-        admin ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-green-700 font-semibold', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'public') }, 'Publikovat') : ''
-        // m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
+        m('.flex.w-1/2.h-auto.items-center', [
+          // m('span.text-xs', item.id),
+          m(m.route.Link, { class: 'w-6 h-6 mr-3', href: `/u/${item.author.username}` }, m('.inline-block.h-full.w-full.rounded-full', { style: `background: url(${item.author.avatar}); background-size: 100% 100%;` })),
+          m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `${item.author.username}`) : ''),
+          // vnode.attrs.standalone ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Permalink'),
+          // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
+          allowModify ? m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit') : '',
+          allowModify ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item) }, 'Smazat') : '',
+          allowModify && item.type === 'draft' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-green-700', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'in-queue') }, 'Do fronty') : '',
+          admin ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-green-700 font-semibold', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'public') }, 'Publikovat') : ''
+          // m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
+        ]),
+        m('.flex.w-1/2.h-auto.items-center.justify-end.text-white.text-md', [
+          m('a.w-10.h-10.flex.items-center.justify-center.bg-gray-500.hover:bg-gray-600', { href: fullUrl, target: '_blank' }, m('.fas.fa-link.bl0k-no-click')),
+          m('a.w-10.h-10.flex.items-center.justify-center.bg-fb.hover:bg-fb-dark.ml-1', { href: 'http://www.facebook.com/sharer/sharer.php?u=' + fullUrl, target: '_blank' }, m('.fab.fa-facebook-f.bl0k-no-click')),
+          m('a.w-10.h-10.flex.items-center.justify-center.bg-tw.hover:bg-tw-dark.ml-1', { href: 'http://www.twitter.com/share?url=' + fullUrl, target: '_blank' }, m('.fab.fa-twitter.bl0k-no-click'))
+        ])
       ])
     ])
   }

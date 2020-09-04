@@ -31,7 +31,7 @@ module.exports = {
   },
 
   onupdate (vnode) {
-    if (user && (vnode.attrs.user !== user.username)) {
+    if (user && (vnode.attrs.user.toLowerCase() !== user.username.toLowerCase())) {
       loadUser(vnode.attrs.user)
     }
   },

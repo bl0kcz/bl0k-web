@@ -342,7 +342,11 @@ const Header = {
 let selected = null
 function selectItem (id) {
   return (e) => {
-    if (e.target.nodeName === 'A' || e.target.className.split(' ').includes('bl0k-symbol')) {
+    const classes = e.target.className.split(' ')
+    if (e.target.nodeName === 'A' ||
+      classes.includes('bl0k-symbol') ||
+      classes.includes('bl0k-no-click')
+    ) {
       /* if ($('#bl0k-tooltip').get(0)) {
         window.bl0k.symbolTooltipHide()
       } */

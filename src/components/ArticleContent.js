@@ -23,7 +23,7 @@ const DetailBox = {
     const auth = window.bl0k.auth
     const admin = auth && (auth.user && auth.user.admin)
     const allowModify = auth && (auth.userId === item.author.id || admin)
-    const fullUrl = 'https://bl0k.cz' + item.url
+    const fullUrl = 'https://bl0k.cz/' + item.sid
 
     return m('.w-full.mt-5', [
       m('.text-sm.flex.w-full.h-auto.items-center', [
@@ -36,7 +36,7 @@ const DetailBox = {
           allowModify ? m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline', href: `/console/edit/${item.id}` }, 'Upravit') : '',
           allowModify ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-red-700', href: '#', onclick: () => window.bl0k.deleteArticle(item) }, 'Smazat') : '',
           allowModify && item.type === 'draft' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-green-700', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'in-queue') }, 'Do fronty') : '',
-          admin ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-green-700 font-semibold', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'public') }, 'Publikovat') : ''
+          admin && item.type !== 'public' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-green-700 font-semibold', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'public') }, 'Publikovat') : ''
           // m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
         ]),
         m('.flex.w-1/2.h-auto.items-center.justify-end.text-white.text-md', [

@@ -3,6 +3,7 @@ const m = require('mithril')
 const ArticleContent = require('./ArticleContent')
 const { formatDate } = require('../lib/utils')
 const jsondiffpatch = require('jsondiffpatch')
+const dateFns = require('date-fns')
 
 const data = {}
 
@@ -62,6 +63,71 @@ const Comment = {
       loadArticle(data.article.id)
     })
     return false
+  }
+}
+
+const ITable = {
+  view (vnode) {
+    const cols = vnode.attrs.cols
+    return m('table.w-full.table-auto.border.mb-2', [
+      // m('thead', [ ]),
+      m('tbody', cols.map(c => {
+        return m('tr.table-row', [
+          m('th.w-1/6.px-4.py-2.text-right.border.border-gray-300.bg-gray-100', c.title),
+          m('td.w-5/6.px-4.py-2.border.border-gray-200.break-all', c.val)
+        ])
+      }))
+    ])
+  }
+}
+
+const ArticleIntrospection = {
+  link (target, text = null, mono = false) {
+    if (text === null) {
+      text = target
+    }
+    const cl = `text-red-700 hover:underline ${mono ? 'font-mono text-lg' : ''}`
+    if (target.substring(0, 1) === '/') {
+      return m(m.route.Link, { href: target, class: cl }, text)
+    }
+    return m('a', { class: cl }, text)
+  },
+  view (vnode) {
+    const a = vnode.attrs.item
+    const cols = [
+      { title: 'ID', val: m('span.font-mono.text-lg', a.id) },
+      { title: 'sID', val: this.link(`/${a.sid}`, a.sid, true) },
+      { title: 'Status', val: m('span.font-mono.text-lg', a.type) },
+      { title: 'Vytvořeno', val: dateFns.format(new Date(a.date), 'd.M.yyyy HH:mm') + ' (' + dateFns.formatDistanceToNow(new Date(a.date)) + ' zpět)' },
+      { title: 'Autor', val: [this.link(`/u/${a.author.username}`, `@${a.author.username}`), ' (', m('span.font-mono.text-lg', a.author.id), ')'] },
+      { title: 'URL', val: this.link(a.url) },
+      { title: 'Chainy', val: a.chains.map(t => t.name).join(', ') },
+      { title: 'Tagy', val: a.tags.map(t => `#${t}`).join(', ') },
+      {
+        title: 'Zdroje',
+        val: a.sources.map(s => {
+          return m(ITable, {
+            cols: [
+              { title: 'Type', val: m('span.font-mono.text-lg', s.name) },
+              { title: 'URL', val: this.link(s.url) }
+            ]
+          })
+        })
+      },
+      {
+        title: 'Odkazy',
+        val: a.links.map(i => {
+          return m(ITable, {
+            cols: [
+              { title: 'URL', val: this.link(i.url) },
+              { title: 'sURL', val: this.link(i.surl) },
+              { title: 'Link ID', val: m('span.font-mono.text-lg', i.link) }
+            ]
+          })
+        })
+      }
+    ]
+    return m(ITable, { cols })
   }
 }
 
@@ -128,7 +194,7 @@ module.exports = {
           m('h2.text-lg.flex.items-center', [
             `Historie úprav (${history.length})`,
             m('.text-sm.ml-5', [
-              m('a.hover:underline', { href: '#', onclick: () => (this.showHistory = !this.showHistory) }, `${!this.showHistory ? 'Zobrazit' : 'Skrýt'} historii`)
+              m('a.hover:underline', { href: '#', onclick: () => { (this.showHistory = !this.showHistory); return false } }, `${!this.showHistory ? 'Zobrazit' : 'Skrýt'} historii`)
             ])
           ]),
           !this.showHistory ? '' : m('.pt-3', history.map(h => {
@@ -156,6 +222,10 @@ module.exports = {
               ]) : ''
             ])
           }))
+        ]),
+        !(user && user.admin) ? '' : m('.hidden.md:block.my-5.', [
+          m('h2.text-lg.flex.items-center', 'Introspekce zprávy'),
+          m('.block.pt-3', m(ArticleIntrospection, { item: data.article }))
         ])
       ])
     ])

@@ -251,7 +251,7 @@ function loadBundle () {
 const TableList = {
   view (vnode) {
     const items = vnode.attrs.items
-    return m('table.w-full.table-auto', [
+    return m('table.w-full.table-auto.border', [
       /* m('thead', [
         m('tr', [
           m('th.py-2.px-4.font-normal.text-sm', 'Čas'),

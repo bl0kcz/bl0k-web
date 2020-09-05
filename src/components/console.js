@@ -4,6 +4,7 @@ const m = require('mithril')
 const { SimpleHeader } = require('./headers')
 const dateFns = require('date-fns')
 const marked = require('marked')
+const FilePond = require('filepond')
 
 const data = {}
 
@@ -27,6 +28,22 @@ const Layout = {
       m(SimpleHeader, { name: m(m.route.Link, { class: 'hover:underline', href: '/console' }, 'Konzole') }),
       m('div', vnode.children)
     ]
+  }
+}
+
+const UploadBlock = {
+  oncreate (vnode) {
+    FilePond.setOptions({
+      server: window.bl0k.options.apiUrl
+    })
+    this.pond = FilePond.create({
+      allowMultiple: true,
+      name: 'filepond'
+    })
+    vnode.dom.appendChild(this.pond.element)
+  },
+  view () {
+    return m('div')
   }
 }
 
@@ -202,6 +219,15 @@ const Editor = {
                 ]),
                 m('.flex.mt-2', [
                   m('input.form-input.block.w-full', { type: 'text', oninput: Message.setProperty('source'), value: Message.source })
+                ])
+              ]),
+              m('.block.mt-5', [
+                m('.inline.text-gray-700', [
+                  'Přílohy',
+                  m('.inline.text-sm.ml-2', '- obrázky')
+                ]),
+                m('.flex.mt-2', [
+                  m('.w-full', m(UploadBlock))
                 ])
               ]),
               m('h2.text-xl.pt-5.pb-2', 'Náhled'),

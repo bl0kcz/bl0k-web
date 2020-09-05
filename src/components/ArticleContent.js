@@ -1,4 +1,3 @@
-/* globals twttr */
 
 const m = require('mithril')
 const { formatDate } = require('../lib/utils')
@@ -51,7 +50,7 @@ const DetailBox = {
   }
 }
 
-const TwitterEmbed = {
+/* const TwitterEmbed = {
   oncreate (vnode) {
     if (window.twttr && twttr.widgets) {
       twttr.widgets.load(vnode.dom)
@@ -66,6 +65,18 @@ const TwitterEmbed = {
   },
   view (vnode) {
     return m('.block', { style: 'max-width: 550px;' }, this.html)
+  }
+} */
+
+const TwitterScreenEmbed = {
+  oninit (vnode) {
+    this.id = vnode.attrs.embed.meta.url.match(/(\d+)$/)[1]
+    this.imageSrc = `https://api.bl0k.cz/browser/tweet?id=${this.id}`
+  },
+  view (vnode) {
+    return m('a', { href: vnode.attrs.embed.meta.url, target: '_blank', style: 'image-rendering: high-quality;' },
+      m('img.mt-3.bl0k-no-click', { style: 'width: 500px', src: this.imageSrc })
+    )
   }
 }
 
@@ -133,7 +144,8 @@ module.exports = {
         m('.content', m('.break-words', this.htmlArr)),
         m('.flex.justify-center', i.embeds.map(embed => {
           if (embed.type === 'twitter') {
-            return m(TwitterEmbed, { embed })
+            return m(TwitterScreenEmbed, { embed })
+            // return m(TwitterEmbed, { embed })
           }
         })),
         // i.embed && i.embed.tweet && embedAllowed ? m('div.flex.justify-center.mt-1', [m('.pt-0', m.trust(i.embed.tweet))]) : '',

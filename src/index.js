@@ -139,6 +139,7 @@ const bl0k = window.bl0k = {
   auth: null,
   tooltip: null,
   tooltipLoading: false,
+  options,
   ethLogin () {
     if (!window.ethereum) {
       alert('Nemáte nainstalovanou MetaMask!')

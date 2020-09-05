@@ -20,6 +20,7 @@
     "d3": "^6.1.1",
     "date-fns": "^2.15.0",
     "ethereum-blockies-base64": "^1.0.2",
+    "filepond": "^4.20.1",
     "jquery": "^3.5.1",
     "jsondiffpatch": "^0.4.1",
     "marked": "^1.1.1",

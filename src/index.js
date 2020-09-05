@@ -3,6 +3,7 @@ const m = require('mithril')
 const qs = require('querystring')
 const $ = require('jquery')
 const currency = require('currency.js')
+const d3 = require('d3')
 
 const Console = require('./components/console')
 const { SimpleHeader, Logo, AuthPart } = require('./components/headers')
@@ -38,13 +39,44 @@ const loadStatus = {
 const Tooltip = {
   view (vnode) {
     const tt = vnode.attrs.data
-    const style = `z-index: 1; top: ${tt.top || 0}px; left: ${tt.left || 0}px; width: 320px;`
+    const style = `z-index: 1; top: ${tt.top || 0}px; left: ${tt.left || 0}px; width: 400px;`
     return m('#bl0k-tooltip.absolute.border.py-1.px-2.bg-white.shadow.shadow-lg.rounded.transition-all.duration-300.ease-in-out', {
       style,
       onclick: () => {
         window.bl0k.symbolTooltipHide()
       }
     }, tt.content)
+  }
+}
+
+const Sparkline = {
+  oncreate (vnode) {
+    const src = vnode.attrs.data
+    const DATA_COUNT = src.length
+    const WIDTH = 100
+    const HEIGHT = 37
+
+    this.svg = d3.select(vnode.dom).append('svg')
+      .attr('width', WIDTH)
+      .attr('height', HEIGHT)
+
+    const min = Math.min(...src)
+    const max = Math.max(...src)
+    const positive = Boolean((src[src.length - 1] - src[0]) > 0)
+    // console.log(JSON.stringify(src), src.length, src[src.length], src[0], src[src.length] - src[0])
+
+    const x = d3.scaleLinear().domain([0, DATA_COUNT]).range([0, WIDTH])
+    const y = d3.scaleLinear().domain([min, max]).range([HEIGHT, 0])
+    const line = d3.line().x((d, i) => x(i)).y(d => y(d))
+
+    this.svg.append('path').datum(src)
+      .attr('fill', 'none')
+      .attr('stroke', positive ? '#2f855a' : '#c53030')
+      .attr('stroke-width', 1)
+      .attr('d', line)
+  },
+  view () {
+    return m('.border.border-gray-200')
   }
 }
 
@@ -56,22 +88,40 @@ const TokenTooltip = {
     }
     return m('.w-auto', [
       m('.flex', [
-        m('div.mt-1.h-full', [
-          m('.block', [
+        m('.mt-1.h-full', [
+          m('.block.w-10', [
             m('img.h-10', { src: d.image.large })
           ])
         ]),
-        m('div', [
+        m('.w-full', [
           m('.flex.items-center', [
             m('.ml-2.text-lg.font-bold', d.name),
             m('.ml-2', '(' + d.symbol.toUpperCase() + ')')
           ]),
           m('div', [
-            m('.ml-2', [
-              m('span.font-bold', bl0k.formatAmount(d.market_data.current_price.usd)),
-              m('span.ml-2.text-sm.text-gray-700', '(' + bl0k.formatAmount(d.market_data.current_price.czk, 2, 'czk') + ')'),
-              m('span.ml-2', { class: `text-md text-${d.market_data.price_change_24h > 0 ? 'green' : 'red'}-700` }, (d.market_data.price_change_24h > 0 ? '+' : '') + (Math.round(((d.market_data.price_change_24h) * 100)) / 100) + '%')
+            m('.mt-1.ml-2.flex.items-center.w-full', [
+              m('.block.w-1/3.pr-1', [
+                m('.font-bold', bl0k.formatAmount(d.market_data.current_price.usd)),
+                m('.text-sm.text-gray-700', '(' + bl0k.formatAmount(d.market_data.current_price.czk, 2, 'czk') + ')')
+              ]),
+              m('.block.w-1/3.flex.justify-center.text-center', [
+                m('.block', [
+                  m('.inline-block', { class: `text-sm text-${d.market_data.price_change_percentage_24h > 0 ? 'green' : 'red'}-700` }, [(d.market_data.price_change_percentage_24h > 0 ? '+' : '') + (Math.round(((d.market_data.price_change_percentage_24h) * 100)) / 100) + '% ', m('span.text-xs', '(24h)')]),
+                  m('.inline-block', { class: `text-sm text-${d.market_data.price_change_percentage_7d > 0 ? 'green' : 'red'}-700` }, [(d.market_data.price_change_percentage_7d > 0 ? '+' : '') + (Math.round(((d.market_data.price_change_percentage_7d) * 100)) / 100) + '% ', m('span.text-xs', '(7d)')])
+                ])
+              ]),
+              m('.block.w-1/3', [
+                m('div', [
+                  m('.flex.justify-end.mr-3', m(Sparkline, { data: d.market_data.sparkline_7d.price }))
+                ])
+              ])
             ])
+          ])
+        ]),
+        m('div', [
+          m('div', [
+          ]),
+          m('div', [
           ])
         ])
       ]),
@@ -204,7 +254,7 @@ const bl0k = window.bl0k = {
     const rect = e.getBoundingClientRect()
     const rectBase = base.get(0).getBoundingClientRect()
     // console.log(rect, rectBase, e.offsetTop, e.offsetLeft)
-    const w = 320
+    const w = 400
     this.request(`/symbol/${symbol}`).then(out => {
       this.tooltipLoading = false
       this.tooltip = {
@@ -405,7 +455,7 @@ const Feed = {
             case 'draft':
               return 'bg-orange-200'
             case 'in-queue':
-              return 'bg-green-200'
+              return 'bg-blue-200'
           }
           return ''
         })(i.type)

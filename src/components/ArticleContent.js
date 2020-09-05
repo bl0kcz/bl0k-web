@@ -28,19 +28,20 @@ const DetailBox = {
 
     return m('.w-full.mt-5', [
       m('.text-sm.flex.w-full.h-auto.items-center', [
-        m('.flex.w-4/6.h-auto.items-center', [
+        m('.flex.w-4/6.md:w-5/6.h-auto.items-center', [
           // m('span.text-xs', item.id),
           m(m.route.Link, { class: 'w-6 h-6 mr-3', href: `/u/${item.author.username}` }, m('.inline-block.h-full.w-full.rounded-full', { style: `background: url(${item.author.avatar}); background-size: 100% 100%;` })),
           m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `${item.author.username}`) : ''),
-          (std || item.type !== 'public') ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Přidat komentář'),
+          (std || item.type === 'draft') ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Přidat komentář'),
           // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
           allowModify ? m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: `/console/edit/${item.id}`, title: 'Upravit' }, [m('i.fas.fa-edit.text'), std || item.type !== 'public' ? m('span.ml-2', 'Upravit') : '']) : '',
           allowModify ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: '#', title: 'Smazat', onclick: () => window.bl0k.deleteArticle(item) }, [m('i.fas.fa-trash-alt.text'), std ? m('span.ml-2', 'Smazat') : '']) : '',
           allowModify && item.type === 'draft' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline hover:text-blue-900 text-blue-700', title: 'Do fronty', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'in-queue') }, [m('i.fas.fa-check'), std || item.type === 'draft' ? m('span.ml-2', 'Do fronty') : '']) : '',
-          admin && item.type !== 'public' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline hover:text-green-900 text-green-700 font-semibold', title: 'Publikovat', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'public') }, [m('i.fas.fa-check-double'), std || item.type === 'in-queue' ? m('span.ml-2', 'Publikovat') : '']) : ''
+          admin && item.type !== 'public' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline hover:text-green-900 text-green-700 font-semibold', title: 'Publikovat', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'public') }, [m('i.fas.fa-check-double'), std || item.type === 'in-queue' ? m('span.ml-2', 'Publikovat') : '']) : '',
+          admin && item.type === 'in-queue' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline hover:text-red-900 text-red-700 font-semibold', title: 'Zamítnout', href: '#', onclick: () => window.bl0k.changeArticleType(item, 'draft') }, [m('i.fas.fa-times-circle'), std || item.type === 'in-queue' ? m('span.ml-2', 'Zamítnout') : '']) : ''
           // m(m.route.Link, { class: 'ml-5 hover:underline', href: `/report/${item.id}` }, 'Nahlásit')
         ]),
-        item.type === 'public' ? m('.flex.w-2/6.h-auto.items-center.justify-end.text-white.text-md', [
+        item.type === 'public' ? m('.flex.w-2/6.md:1/6.h-auto.items-center.justify-end.text-white.text-md', [
           m('a.w-10.h-10.flex.items-center.justify-center.bg-gray-500.hover:bg-gray-600', { href: fullUrl, target: '_blank' }, m('.fas.fa-link.bl0k-no-click')),
           m('a.w-10.h-10.flex.items-center.justify-center.bg-fb.hover:bg-fb-dark.ml-1', { href: 'http://www.facebook.com/sharer/sharer.php?u=' + fullUrl, target: '_blank' }, m('.fab.fa-facebook-f.bl0k-no-click')),
           m('a.w-10.h-10.flex.items-center.justify-center.bg-tw.hover:bg-tw-dark.ml-1', { href: 'http://www.twitter.com/share?url=' + fullUrl, target: '_blank' }, m('.fab.fa-twitter.bl0k-no-click'))

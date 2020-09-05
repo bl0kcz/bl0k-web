@@ -166,9 +166,9 @@ module.exports = {
           }))
         ]) : '', */
 
-        (data.article.comments.length < 1 && !user) || (data.article.type === 'draft') ? '' : m('.mb-5', [
+        (data.article.type === 'draft' && data.article.comments.length === 0) ? '' : m('.mb-5', [
           m('h2.text-lg', `Komentáře (${data.article.comments.length})`),
-          m('.pt-3', data.article.comments.map(c => {
+          (data.article.comments.length < 1 && !user) ? '' : m('.pt-3', data.article.comments.map(c => {
             const canModify = user && (c.author.id === user.id || user.admin)
             const html = window.bl0k.tooltipProcess(c.html)
 
@@ -184,6 +184,7 @@ module.exports = {
               ])
             ])
           })),
+          user ? '' : m('.mt-8.text-gray-700', 'Nové komentáře mohou psát jen přihlášení uživatelé.'),
           // m('.mt-5', 'Žádný komentář nenalezen'),
           window.bl0k.auth ? m('form.flex.mt-5.md:mx-2', { onsubmit: Comment.submit }, [
             m('.block', m('.w-8.h-8.mr-3.mt-1.rounded-full', { style: `background: url(${window.bl0k.auth.user.avatar}); background-size: 100% 100%;` })),
@@ -195,7 +196,7 @@ module.exports = {
             ])
           ]) : ''
         ]),
-        (!history || history.length < 1) ? '' : m('.block.mb-3.mt-3', [
+        (!history || history.length < 1) ? '' : m('.block.mt-5.lg:mt-10', [
           m('h2.text-lg.flex.items-center', [
             `Historie úprav (${history.length})`,
             m('.text-sm.ml-5', [
@@ -207,7 +208,8 @@ module.exports = {
               created: ['vytvořil ', m('span.text-orange-700.font-bold', 'koncept')],
               updated: 'upravil zprávu',
               'status:in-queue': ['přesunul zprávu do ', m('span.text-blue-700.font-bold', 'fronty')],
-              'status:public': [m('span.text-green-700.font-bold', 'zveřejnil'), ' zprávu']
+              'status:public': [m('span.text-green-700.font-bold', 'zveřejnil'), ' zprávu'],
+              'status:draft': [m('span.text-red-700.font-bold', 'zamítnul'), ' zprávu']
             }
 
             return m('.my-2.md:mx-2.mb-5', [
@@ -228,7 +230,7 @@ module.exports = {
             ])
           }))
         ]),
-        !(user && user.admin) ? '' : m('.hidden.md:block.my-5.', [
+        !(user && user.admin) ? '' : m('.hidden.md:block.mt-5.lg:mt-10.', [
           m('h2.text-lg.flex.items-center', 'Introspekce zprávy'),
           m('.block.pt-3', m(ArticleIntrospection, { item: data.article }))
         ])

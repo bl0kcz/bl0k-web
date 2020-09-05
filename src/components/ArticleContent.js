@@ -71,7 +71,7 @@ const DetailBox = {
 const TwitterScreenEmbed = {
   oninit (vnode) {
     this.id = vnode.attrs.embed.meta.url.match(/(\d+)$/)[1]
-    this.imageSrc = `https://api.bl0k.cz/browser/tweet?id=${this.id}`
+    this.imageSrc = `https://bl0k.cz/static/tweets/${this.id}.png`
   },
   view (vnode) {
     return m('a', { href: vnode.attrs.embed.meta.url, target: '_blank', style: 'image-rendering: high-quality;' },

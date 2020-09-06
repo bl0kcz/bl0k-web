@@ -34,7 +34,7 @@ module.exports = {
 
     function item (x) {
       return m((x.noPadding ? '.pl-1' : '.pl-3.lg:pl-4') + (x.hidden ? '.hidden.md:block' : ''),
-        m('a', { href: x.url, target: '_blank' }, [
+        m('a', { href: x.url, target: '_blank', rel: 'noopener' }, [
           x.ico ? m(`i.fab.${x.ico}.mr-1`) : '',
           x.render ? m.trust(x.render()) : m('span.font-bold', bl0k.formatAmount(x.amount)
           )]

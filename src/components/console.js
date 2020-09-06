@@ -1,8 +1,8 @@
 /* globals alert */
 
+import { formatDistanceToNow } from 'date-fns'
 const m = require('mithril')
 const { SimpleHeader } = require('./headers')
-const dateFns = require('date-fns')
 const marked = require('marked')
 const FilePond = require('filepond')
 
@@ -183,7 +183,7 @@ const Editor = {
             ]),
             m('.mt-2.mb-5.text-sm.text-gray-600', [
               'Text je ve formátu ',
-              m('a.text-blue-700.hover:underline', { href: 'http://www.edgering.org/markdown/', target: '_blank' }, 'Markdown'),
+              m('a.text-blue-700.hover:underline', { href: 'http://www.edgering.org/markdown/', target: '_blank', rel: 'noopener' }, 'Markdown'),
               '. Základní formátování: ',
               m('span.font-mono.text-lg', '**tučně**, *kurzíva*, [odkaz](http://example.org)')
             ]),
@@ -289,7 +289,7 @@ const TableList = {
       m('tbody', items.map(i => {
         return m('tr', [
           m('td.border.px-3.py-2.text-sm', [
-            m('p', dateFns.formatDistanceToNow(new Date(i.date))),
+            m('p', formatDistanceToNow(new Date(i.date))),
             m('p.text-xs', '@tree')
           ]),
           m('td.border.px-3.py-2.text-xs.max-w-xl', m('article', m('.content', m.trust(i.html)))),

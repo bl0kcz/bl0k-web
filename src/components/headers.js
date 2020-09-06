@@ -98,7 +98,7 @@ const Logo = {
   },
   view (vnode) {
     return m('.mx-5',
-      m(m.route.Link, { href: '/', style: 'font-family: monospace;' }, m('img.h-8', { src: logoImage }))
+      m(m.route.Link, { href: '/', style: 'font-family: monospace;', title: 'bl0k.cz' }, m('img.h-8', { src: logoImage, alt: 'bl0k.cz' }))
     )
     // return m('span.mx-5.text-xl.pr-3.text-gray-700', )
   }

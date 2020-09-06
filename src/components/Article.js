@@ -1,9 +1,10 @@
 /* globals confirm */
+import { format, formatDistanceToNow } from 'date-fns'
+
 const m = require('mithril')
 const ArticleContent = require('./ArticleContent')
 const { formatDate } = require('../lib/utils')
 const jsondiffpatch = require('jsondiffpatch')
-const dateFns = require('date-fns')
 
 const data = {}
 
@@ -91,7 +92,7 @@ const ArticleIntrospection = {
     if (target.substring(0, 1) === '/') {
       return m(m.route.Link, { href: target, class: cl }, text)
     }
-    return m('a', { href: target, class: cl, target: '_blank' }, text)
+    return m('a', { href: target, class: cl, target: '_blank', rel: 'noopener' }, text)
   },
   view (vnode) {
     const a = vnode.attrs.item
@@ -101,7 +102,7 @@ const ArticleIntrospection = {
       { title: 'URL', val: this.link(a.url) },
       { title: 'Status', val: m('b.font-mono.text-lg', a.type) },
       { title: 'Autor', val: [this.link(`/u/${a.author.username}`, `@${a.author.username}`), ' (', m('span.font-mono.text-lg', a.author.id), ')'] },
-      { title: 'Vytvořeno', val: dateFns.format(new Date(a.date), 'd.M.yyyy HH:mm') + ' (' + dateFns.formatDistanceToNow(new Date(a.date)) + ' zpět)' },
+      { title: 'Vytvořeno', val: format(new Date(a.date), 'd.M.yyyy HH:mm') + ' (' + formatDistanceToNow(new Date(a.date)) + ' zpět)' },
       { title: 'Duležitá zpráva', val: a.important ? m('b', 'ano') : 'ne' },
       { title: 'Zdrojový text', val: m('.font-mono.py-2.px-3.border.rounded-lg', a.data.text) },
       { title: 'Čistý text', val: m('.font-mono.py-2.px-3.border.rounded-lg', a.rendered.card.text) },
@@ -159,12 +160,6 @@ module.exports = {
         m('.mb-8.p-3.lg:p-5.border.rounded', [
           m('article.text-xl', m(ArticleContent, { item: data.article, standalone: true }))
         ]),
-        /* links.length > 0 ? m('.block', [
-          m('h2.text-lg', 'Odkazy'),
-          m('.p-5', links.map(l => {
-            return m('.mb-2.break-all', ['•', m('a.hover:underline.ml-3', { href: l.surl, target: '_blank' }, l.url)])
-          }))
-        ]) : '', */
 
         (data.article.type === 'draft' && data.article.comments.length === 0) ? '' : m('.mb-5', [
           m('h2.text-lg', `Komentáře (${data.article.comments.length})`),

@@ -10,7 +10,7 @@ module.exports = {
 
   theme: {
     fontFamily: {
-      inter: ['Inter', 'sans-serif'],
+      inter: ['Inter var experimental', 'sans-serif'],
       mono: ['monospace']
     },
     backgroundColor: theme => ({
@@ -24,7 +24,8 @@ module.exports = {
   variants: {},
   corePlugins: {},
   future: {
-    removeDeprecatedGapUtilities: true
+    removeDeprecatedGapUtilities: true,
+    purgeLayersByDefault: true
   },
   plugins: [
     require('@tailwindcss/custom-forms'),

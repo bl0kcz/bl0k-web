@@ -161,7 +161,7 @@ module.exports = {
               }),
               m('.mt-1.mb-5.text-sm.text-gray-600', [
                 'Text je ve formátu ',
-                m('a.text-blue-700.hover:underline', { href: 'http://www.edgering.org/markdown/', target: '_blank' }, 'Markdown'),
+                m('a.text-blue-700.hover:underline', { href: 'http://www.edgering.org/markdown/', target: '_blank', rel: 'noopener' }, 'Markdown'),
                 '.'
               ])
             ]),

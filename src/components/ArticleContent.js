@@ -42,8 +42,8 @@ const DetailBox = {
         ]),
         item.type === 'public' ? m('.flex.w-2/6.md:1/6.h-auto.items-center.justify-end.text-white.text-md', [
           m('a.w-10.h-10.flex.items-center.justify-center.bg-gray-500.hover:bg-gray-600', { href: fullUrl, target: '_blank' }, m('.fas.fa-link.bl0k-no-click')),
-          m('a.w-10.h-10.flex.items-center.justify-center.bg-fb.hover:bg-fb-dark.ml-1', { href: 'http://www.facebook.com/sharer/sharer.php?u=' + fullUrl, target: '_blank' }, m('.fab.fa-facebook-f.bl0k-no-click')),
-          m('a.w-10.h-10.flex.items-center.justify-center.bg-tw.hover:bg-tw-dark.ml-1', { href: 'http://www.twitter.com/share?url=' + fullUrl, target: '_blank' }, m('.fab.fa-twitter.bl0k-no-click'))
+          m('a.w-10.h-10.flex.items-center.justify-center.bg-fb.hover:bg-fb-dark.ml-1', { href: 'http://www.facebook.com/sharer/sharer.php?u=' + fullUrl, target: '_blank', rel: 'noopener' }, m('.fab.fa-facebook-f.bl0k-no-click')),
+          m('a.w-10.h-10.flex.items-center.justify-center.bg-tw.hover:bg-tw-dark.ml-1', { href: 'http://www.twitter.com/share?url=' + fullUrl, target: '_blank', rel: 'noopener' }, m('.fab.fa-twitter.bl0k-no-click'))
         ]) : ''
       ])
     ])
@@ -74,8 +74,8 @@ const TwitterScreenEmbed = {
     this.imageSrc = `https://bl0k.cz/static/tweets/${this.id}.png`
   },
   view (vnode) {
-    return m('a', { href: vnode.attrs.embed.meta.url, target: '_blank', style: 'image-rendering: high-quality;' },
-      m('img.mt-3.bl0k-no-click', { style: 'width: 500px', src: this.imageSrc })
+    return m('a', { href: vnode.attrs.embed.meta.url, target: '_blank', rel: 'noopener', style: 'image-rendering: high-quality;' },
+      m('img.mt-3.bl0k-no-click', { style: 'width: 500px', src: this.imageSrc, alt: `Tweet ${this.id}` })
     )
   }
 }
@@ -110,7 +110,7 @@ module.exports = {
       if (i.embeds && i.embeds[0] && i.embeds[0].meta.url === s.url) {
         continue
       }
-      baseHtml += ` (<a class="bl0k-article-source" target="_blank" href="${s.url}">${s.name}</a>)`
+      baseHtml += ` (<a class="bl0k-article-source" target="_blank" rel="noopener" href="${s.url}">${s.name}</a>)`
     }
 
     if (!baseHtml) {

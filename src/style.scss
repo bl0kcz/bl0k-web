@@ -4,8 +4,7 @@
 
 @tailwind utilities;
 
-/*@import "../node_modules/placeholder-loading/src/scss/placeholder-loading";*/
-
+@import "../node_modules/typeface-inter/inter.css";
 @import "../node_modules/jsondiffpatch/dist/formatters-styles/annotated.css";
 @import "../node_modules/jsondiffpatch/dist/formatters-styles/html.css";
 @import "../node_modules/@fortawesome/fontawesome-free/css/all.css";

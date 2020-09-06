@@ -1,5 +1,6 @@
+import { format } from 'date-fns'
 const m = require('mithril')
-const dateFns = require('date-fns')
+
 const bl0k = window.bl0k
 
 let user = null
@@ -55,9 +56,9 @@ module.exports = {
               ]),
               !user.admin ? '' : m('span.font-bold.text.px-2.py-1.w-auto.bg-red-200.text-red-700.rounded.text-sm', 'admin'),
               // m('.mt-2.wrap-all', ['ID: ', m('span.font-mono.text-xl', user.id)]),
-              m('.mt-2', ['Členem od ', m('span', { title: user.created }, `${dateFns.format(new Date(user.created), 'd.M.yyyy')}`)]),
-              user.data.webUrl ? m('.mt-1', ['Web: ', m('a.hover:underline.text-red-700', { target: '_blank', href: user.data.webUrl }, user.data.webUrl)]) : '',
-              user.data.twitterUsername ? m('.mt-1', ['Twitter: ', m('a.hover:underline.text-red-700', { target: '_blank', href: `https://twitter.com/${user.data.twitterUsername}` }, '@' + user.data.twitterUsername)]) : ''
+              m('.mt-2', ['Členem od ', m('span', { title: user.created }, `${format(new Date(user.created), 'd.M.yyyy')}`)]),
+              user.data.webUrl ? m('.mt-1', ['Web: ', m('a.hover:underline.text-red-700', { target: '_blank', href: user.data.webUrl, rel: 'noopener' }, user.data.webUrl)]) : '',
+              user.data.twitterUsername ? m('.mt-1', ['Twitter: ', m('a.hover:underline.text-red-700', { target: '_blank', rel: 'noopener', href: `https://twitter.com/${user.data.twitterUsername}` }, '@' + user.data.twitterUsername)]) : ''
             ])
           ]),
           !html ? '' : m('.mt-5.md:mt-10.border.rounded.bg-gray-100.bl0k-base-html.', [

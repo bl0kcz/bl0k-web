@@ -3,7 +3,9 @@ const m = require('mithril')
 const qs = require('querystring')
 const $ = require('jquery')
 const currency = require('currency.js')
-const d3 = require('d3')
+const { select: d3select } = require('d3-selection')
+const { scaleLinear: d3scaleLinear } = require('d3-scale')
+const { line: d3line } = require('d3-shape')
 
 const Console = require('./components/console')
 const { BaseHeader, SimpleHeader } = require('./components/headers')
@@ -60,7 +62,7 @@ const Sparkline = {
     const WIDTH = 100
     const HEIGHT = 37
 
-    this.svg = d3.select(vnode.dom).append('svg')
+    this.svg = d3select(vnode.dom).append('svg')
       .attr('width', WIDTH)
       .attr('height', HEIGHT)
 
@@ -69,9 +71,9 @@ const Sparkline = {
     const positive = Boolean((src[src.length - 1] - src[0]) > 0)
     // console.log(JSON.stringify(src), src.length, src[src.length], src[0], src[src.length] - src[0])
 
-    const x = d3.scaleLinear().domain([0, DATA_COUNT]).range([0, WIDTH])
-    const y = d3.scaleLinear().domain([min, max]).range([HEIGHT, 0])
-    const line = d3.line().x((d, i) => x(i)).y(d => y(d))
+    const x = d3scaleLinear().domain([0, DATA_COUNT]).range([0, WIDTH])
+    const y = d3scaleLinear().domain([min, max]).range([HEIGHT, 0])
+    const line = d3line().x((d, i) => x(i)).y(d => y(d))
 
     this.svg.append('path').datum(src)
       .attr('fill', 'none')

@@ -7,45 +7,24 @@
         <meta name="mobile-web-app-capable" content="yes">
         <!--meta http-equiv="cache-control" content="max-age=86400"-->
         <title>bl0k.cz - Rychlé zprávy z kryptoměn</title>
-        <!--link rel="preload" href="https://xxxxxxxx.css"-->
-        <!--link rel="prefetch" href="https://www.google-analytics.com"-->
+	<meta name="Description" content="Komunitní zpravodajský server zaměřený na krátké technologické zprávy ze světa kryptoměn">
         <link rel="shortcut icon" href="/assets/images/logo-blok-2-152px.ico">
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:site" content="@bl0kcz" />
         <meta name="og:title" content="Rychlé zprávy z kryptoměn - bl0k.cz" />
         <meta name="og:description" content="Komunitní zpravodajský server zaměřený na krátké technologické zprávy ze světa kryptoměn" />
         <meta name="og:image" content="https://bl0k.cz/static/assets/images/logo-blok-2.png" />
+        <link rel="alternate" type="application/rss+xml" title="bl0k RSS Feed " href="https://bl0k.cz/feed.xml">
+        <link rel="alternate" type="application/atom+xml" title="bl0k Atom Feed" href="https://bl0k.cz/feed-atom.xml">
         <link rel="stylesheet" type="text/css" href="./style.scss">
-        <!--link rel="stylesheet" type="text/css" href="./assets/css/github-markdown.css"-->
-        <!--link rel="stylesheet" href="../vendor/cryptofont/cryptofont.css"-->
-        <link rel="preload" href="https://rsms.me/inter/inter.css">
+	      <link rel="preconnect" href="https://api.bl0k.cz">
+        <link rel="preload" href="../node_modules/typeface-inter/Inter Web/Inter.var.woff2" as="font">
+        <link rel="preload" href="../node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2" as="font">
+        <link rel="preload" href="../node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2" as="font">
     </head>
     <body class="font-inter min-h-screen">
-      <div id="app" class="absolute top-0 left-0 right-0 bottom-0">
-        <header id="header" class="flex h-12 bg-gray-100 items-center">
-          <h1 class="mx-5 text-left text-xl"><a href="#/" style="font-family: monospace;" title="Blok #0 - tzv. Genesis Blok">bl0k.cz</a></h1>
-        </header>
-        <section class="absolute left-0 right-0 bottom-0" style="top: 3rem;">
-
-            <section class="absolute top-0 bottom-0 left-0 w-full lg:w-4/6">
-              <div class="absolute inset-0">
-                <div class="absolute inset-0 overflow-hidden">
-                  <div id="feed-big" class="absolute inset-0 overflow-scroll"><p class="p-5">Načítám obsah ...</p></div>
-                </div>
-              </div>
-            </section>
-
-            <section class="absolute inset-y-0 right-0 bg-gray-200 hidden lg:block w-2/6">
-              <h2 class="p-5 font-bold text-lg">Důležité zprávy</h2>
-              <div class="overflow-hidden absolute left-0 right-0 bottom-0" style="top: 3.5rem;">
-                <div id="feed" class="overflow-scroll absolute top-0 left-0 right-0 bottom-0 pb-10"><p class="p-5">Načítám obsah ...</p></div>
-              </div>
-            </section>
-        </section>
-      </div>
+      <div id="app" class="absolute top-0 left-0 right-0 bottom-0"></div>
       <script src="./index.js" charset="utf-8"></script>
-      <!--script async rel="preload" src="https://platform.twitter.com/widgets.js" charset="utf-8"></script-->
-      <!--script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script-->
     </body>
 </html>
 

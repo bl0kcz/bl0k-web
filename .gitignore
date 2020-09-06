@@ -1,4 +1,6 @@
 node_modules
 deploy_build
+deploy_build_tmp
+deploy_current
 .cache
 dist

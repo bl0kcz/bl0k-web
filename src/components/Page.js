@@ -27,7 +27,10 @@ module.exports = {
         if (!page || pageLoading) {
           return m('div', 'Načítám stránku')
         }
-        return m('.mt-2.lg:w-4/6', m('.prose', { style: 'max-width: 100% !important;' }, m.trust(page.html)))
+        return m('.mt-2.lg:w-4/6', [
+          m('div', m('i.fax.fa-bl0k-new')),
+          m('.prose', { style: 'max-width: 100% !important;' }, m.trust(page.html))
+        ])
       }
     }))
   }

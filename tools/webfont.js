@@ -10,14 +10,19 @@ const iconsList = [
   'solid/edit',
   'solid/trash-alt',
   'brands/facebook-f',
-  'brands/twitter'
+  'brands/twitter',
+  ['src/assets/images/logo-blok', 'bl0k'],
+  ['src/assets/images/logo-blok-mini', 'bl0k-mini'],
+  ['src/assets/images/bl0k-logo', 'bl0k-new']
 ]
 
 // const startUnicode = 0xea01
 const startUnicode = 0xf001
-const startUnicodePrefix = 'f0'
 
 const iconsFiles = iconsList.map(i => {
+  if (Array.isArray(i)) {
+    return i[0] + '.svg'
+  }
   return `node_modules/@fortawesome/fontawesome-free/svgs/${i}.svg`
 })
 
@@ -26,8 +31,8 @@ webfont({
   fontName: 'bl0k-icons',
   startUnicode,
   sort: false,
-  // centerHorizontally: true,
-  // normalize: true,
+  centerHorizontally: true,
+  normalize: true,
   fontWeight: 448,
   descent: 64
 })
@@ -41,7 +46,8 @@ webfont({
     }
     const css = []
     for (let i = 0; i < iconsList.length; i++) {
-      css.push(`.fa-${iconsList[i].split('/')[1]}:before { content: "\\${startUnicodePrefix}${String(i + 1).padStart(2, '0')}"; }`)
+      const cl = Array.isArray(iconsList[i]) ? iconsList[i][1] : iconsList[i].split('/')[1]
+      css.push(`.fa-${cl}:before { content: "\\${Number(startUnicode + i).toString(16)}"; }`)
     }
     const ifn = 'src/assets/css/bl0k-icons.css'
     fs.writeFileSync(ifn, css.join('\n'))

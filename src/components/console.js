@@ -239,7 +239,7 @@ const Editor = {
             ]) : '',
             m('.mt-5.flex', [
               // m('div', 'diff=' + diff),
-              m(`button.bg-${saveEnabled ? 'blue-500.hover:bg-blue-700' : 'gray-400.cursor-not-allowed'}.text-white.py-2.px-4.rounded.transition.duration-200.ease-in-out`, { onclick: this.mode === 'create' ? createArticle : saveArticle, disabled: !saveEnabled ? 'disabled' : '' }, this.mode === 'edit' ? 'Uložit' : 'Vytvořit koncept')
+              m(`button.${saveEnabled ? 'bg-blue-500.hover:bg-blue-700' : 'bg-gray-400.cursor-not-allowed'}.text-white.py-2.px-4.rounded.transition.duration-200.ease-in-out`, { onclick: this.mode === 'create' ? createArticle : saveArticle, disabled: !saveEnabled ? 'disabled' : '' }, this.mode === 'edit' ? 'Uložit' : 'Vytvořit koncept')
             ]),
             auth ? '' : m('.mt-5.text-red-700', 'Pro vkládání a úpravu článků musíte být přihlášeni.')
           ])

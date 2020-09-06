@@ -3,6 +3,11 @@ module.exports = {
   important: false,
   separator: ':',
 
+  purge: {
+    enabled: true,
+    content: ['./src/**/*.html', './src/**/*.js']
+  },
+
   theme: {
     fontFamily: {
       inter: ['Inter', 'sans-serif'],
@@ -18,6 +23,9 @@ module.exports = {
   },
   variants: {},
   corePlugins: {},
+  future: {
+    removeDeprecatedGapUtilities: true
+  },
   plugins: [
     require('@tailwindcss/custom-forms'),
     require('@tailwindcss/typography')

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "bundle": "standard --fix && git add --all && git commit -m Update && git push && npm run build",
-    "start": "parcel -p 5678 --hmr-port 5679 --cert /corn/ssl/certificates/api.bl0k.cz.crt --key /corn/ssl/certificates/api.bl0k.cz.key src/index.html",
+    "start": "parcel -p 5678 --hmr-port 5679 --cert /usr/local/etc/ssl/lego/certificates/indigo.bl0k.cz.crt --key /usr/local/etc/ssl/lego/certificates/indigo.bl0k.cz.key src/index.html",
     "build": "rm -rf deploy_build && parcel build -d deploy_build src/index.html && echo 'gh-mirror.bl0k.cz' > deploy_build/CNAME",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,7 +18,7 @@
     "chart.js": "^2.9.3",
     "currency.js": "^2.0.3",
     "d3": "^6.1.1",
-    "date-fns": "^2.15.0",
+    "date-fns": "^2.16.1",
     "ethereum-blockies-base64": "^1.0.2",
     "filepond": "^4.20.1",
     "jquery": "^3.5.1",
@@ -27,16 +27,15 @@
     "mithril": "^2.0.4",
     "parcel": "^1.12.4",
     "placeholder-loading": "^0.2.6",
-    "postcss-modules": "^3.2.1",
-    "tailwindcss": "^1.7.3",
-    "ws": "^7.3.1"
-  },
-  "devDependencies": {
+    "postcss-modules": "^3.2.2",
+    "tailwindcss": "^1.8.3",
+    "ws": "^7.3.1",
     "@tailwindcss/custom-forms": "^0.2.1",
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
     "postcss-fontpath": "^1.0.0",
     "sass": "^1.26.10",
     "tailwind": "^4.0.0"
-  }
+  },
+  "devDependencies": {}
 }

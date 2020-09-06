@@ -70,7 +70,7 @@ module.exports = {
     ], [
       bundle.online && bundle.online.connected ? m('.mr-3', m.trust(`<i class="fas fa-user mr-1"></i><b>${bundle.online.connected}</b>`)) : '',
       m('div', [
-        m(`i.fas.fa-circle.text-${bl0k.wsConnected ? 'green' : 'red'}-600`, { title: bl0k.wsConnected ? 'připojený' : 'odpojený' }),
+        m(`i.fas.fa-circle.${bl0k.wsConnected ? 'text-green-600' : 'text-red-600'}`, { title: bl0k.wsConnected ? 'připojený' : 'odpojený' }),
         !bl0k.wsConnected ? m('span.hidden.md:inline-block.ml-1', 'odpojen') : m('span.hidden.md:inline-block.ml-1', 'v0.4.1')
       ])
     ])

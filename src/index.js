@@ -11,8 +11,8 @@ const ArticleContent = require('./components/ArticleContent')
 const Infobar = require('./components/Infobar')
 
 const options = {
-  apiUrl: 'https://api2.bl0k.cz/1',
-  apiWsUrl: 'wss://api2.bl0k.cz/wss',
+  apiUrl: 'https://api.bl0k.cz/1',
+  apiWsUrl: 'wss://api.bl0k.cz/wss',
   title: 'bl0k.cz - Rychlé zprávy z kryptoměn',
   titleSuffix: 'bl0k.cz',
   desc: 'Komunitní zpravodajský server zaměřený na krátké technologické zprávy ze světa kryptoměn.'

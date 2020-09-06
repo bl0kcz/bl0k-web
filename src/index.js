@@ -1,4 +1,4 @@
-/* globals localStorage, web3, alert, ethereum, confirm */
+/* globals localStorage, web3, alert, ethereum, confirm, WebSocket */
 const m = require('mithril')
 const qs = require('querystring')
 const $ = require('jquery')
@@ -6,11 +6,13 @@ const currency = require('currency.js')
 const d3 = require('d3')
 
 const Console = require('./components/console')
-const { SimpleHeader, Logo, AuthPart } = require('./components/headers')
+const { BaseHeader, SimpleHeader } = require('./components/headers')
 const ArticleContent = require('./components/ArticleContent')
+const Infobar = require('./components/Infobar')
 
 const options = {
-  apiUrl: 'https://api.bl0k.cz/1',
+  apiUrl: 'https://api2.bl0k.cz/1',
+  apiWsUrl: 'wss://api2.bl0k.cz/wss',
   title: 'bl0k.cz - Rychlé zprávy z kryptoměn',
   titleSuffix: 'bl0k.cz',
   desc: 'Komunitní zpravodajský server zaměřený na krátké technologické zprávy ze světa kryptoměn.'
@@ -26,7 +28,9 @@ let data = {
   header: null,
   important: [],
   chains: {},
-  menu: []
+  menu: [],
+  infobar: {},
+  online: {}
 }
 
 const loadStatus = {
@@ -140,6 +144,8 @@ const bl0k = window.bl0k = {
   tooltip: null,
   tooltipLoading: false,
   options,
+  wsConnected: false,
+  bundleData: () => data,
   ethLogin () {
     if (!window.ethereum) {
       alert('Nemáte nainstalovanou MetaMask!')
@@ -174,7 +180,7 @@ const bl0k = window.bl0k = {
           m.redraw()
 
           const rt = m.route.get()
-          console.log(rt)
+          // console.log(rt)
           if (rt.match(/^\/chain/) || rt === '/') {
             loadData(true)
           }
@@ -288,8 +294,58 @@ const bl0k = window.bl0k = {
       })
     }
   },
+  reconnectWs () {
+    console.log('trying reconnect ..')
+    this.initWs()
+  },
+  initSubpage () {
+    loadData()
+  },
+  initWs () {
+    const onClose = () => {
+      this.wsConnected = false
+      m.redraw()
+      setTimeout(() => {
+        this.reconnectWs()
+      }, 2000)
+    }
+    this.ws = new WebSocket(options.apiWsUrl)
+    this.ws.onopen = () => {
+      console.log(`Websocket connected: ${options.apiWsUrl}`)
+      this.wsConnected = true
+      m.redraw()
+    }
+    this.ws.onclose = (e) => {
+      console.error(`socket closed: ${e}`)
+      onClose()
+    }
+    this.ws.onerror = (e) => {
+      console.error(`socket error: ${e}`)
+    }
+    this.ws.onmessage = function incoming (message) {
+      let res = null
+      try {
+        res = JSON.parse(message.data)
+      } catch (e) {
+        console.error(`Invalid wss payload: ${e.message}`)
+        return null
+      }
+      if (!Array.isArray(res)) {
+        return null
+      }
+      const [type, msg] = res
+      console.log(`wss.incoming:${type}`)
+      if (type === 'update') {
+        for (const key of Object.keys(msg)) {
+          data[key] = msg[key]
+        }
+        m.redraw()
+      }
+    }
+  },
   init () {
     this.initAuth()
+    this.initWs()
   },
   formatAmount (amount, precision = 2, preset = 'usd') {
     const presets = {
@@ -374,26 +430,17 @@ function loadData (refresh = false) {
 
 const Header = {
   view: (vnode) => {
-    return [
-      m('h1', m(Logo, { loadStatus })),
-      m('.text-sm', data.menu.map(mi => {
-        const name = mi.title || mi.chain.name
-        /* if (mi.chain.ico) {
-          name = [ m(`i.pr-1.${mi.chain.ico}`, { style: 'font-family: cryptofont' } ), name ]
-        } */
-        const selChain = vnode.attrs.chain
-        if ((selChain && (selChain === mi.chainId || selChain === name.toLowerCase())) || (mi.chainId === 'all' && !selChain)) {
-          return m('span.underline.font-semibold.pr-3', name)
-        }
-        return m('.hidden.sm:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'mr-3 py-4 hover:underline' }, name))
-      })),
-      m('.absolute.top-0.right-0.h-12.flex.items-center.text-sm.pr-5', [
-        m(m.route.Link, { href: '/console/new', class: 'hover:underline hidden lg:inline-block' }, m.trust('Přidat novou zprávu')),
-        m('.ml-5', m(AuthPart))
-        // m('div', m(m.route.Link, { href: '/p/o-nas', class: 'hover:underline' }, m.trust('Co je to bl0k?')))
-      ])
-      // m('p.text-sm', 'Rychlé zprávy z kryptoměn')
-    ]
+    return m(BaseHeader, m('.text-sm', data.menu.map(mi => {
+      const name = mi.title || mi.chain.name
+      /* if (mi.chain.ico) {
+        name = [ m(`i.pr-1.${mi.chain.ico}`, { style: 'font-family: cryptofont' } ), name ]
+      } */
+      const selChain = vnode.attrs.chain
+      if ((selChain && (selChain === mi.chainId || selChain === name.toLowerCase())) || (mi.chainId === 'all' && !selChain)) {
+        return m('span.underline.font-semibold.pr-3', name)
+      }
+      return m('.hidden.sm:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'mr-3 py-4 hover:underline' }, name))
+    })))
   }
 }
 
@@ -507,7 +554,7 @@ const App = {
     loadData()
   },
   onupdate: (vnode) => {
-    console.log('@', JSON.stringify(opts), JSON.stringify(vnode.attrs))
+    // console.log('@', JSON.stringify(opts), JSON.stringify(vnode.attrs))
     if (JSON.stringify(opts) !== JSON.stringify(vnode.attrs)) {
       console.log('x', opts, vnode.attrs)
       opts = vnode.attrs
@@ -520,8 +567,9 @@ const App = {
   },
   view: (vnode) => {
     return [
+      m(Infobar),
       m('header.flex.h-12.bg-gray-100.items-center.border.border-t-0.border-l-0.border-r-0', m(Header, vnode.attrs)),
-      m('section.absolute.left-0.right-0.bottom-0', { style: 'top: 3rem;' }, [
+      m('section.absolute.left-0.right-0.bottom-0.mt-20.top-0', [
         m('section.absolute.top-0.bottom-0.left-0.w-full.lg:w-4/6', [
           m('div.absolute.inset-0', [
             m('div.absolute.inset-0.overflow-hidden', [

@@ -28,7 +28,8 @@
     "parcel": "^1.12.4",
     "placeholder-loading": "^0.2.6",
     "postcss-modules": "^3.2.1",
-    "tailwindcss": "^1.7.3"
+    "tailwindcss": "^1.7.3",
+    "ws": "^7.3.1"
   },
   "devDependencies": {
     "@tailwindcss/custom-forms": "^0.2.1",

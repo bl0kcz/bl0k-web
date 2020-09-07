@@ -4,7 +4,7 @@ module.exports = {
   separator: ':',
 
   purge: {
-    enabled: true,
+    enabled: false,
     content: ['./src/**/*.html', './src/**/*.js']
   },
 

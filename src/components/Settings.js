@@ -1,7 +1,6 @@
 
-const m = require('mithril')
+const { m, $bl0k } = require('../lib/bl0k')
 const jsondiffpatch = require('jsondiffpatch')
-const bl0k = window.bl0k
 
 module.exports = {
 
@@ -19,17 +18,17 @@ module.exports = {
     this.data = {}
     m.redraw()
 
-    bl0k.request({
+    $bl0k.request({
       url: '/me'
     }).then(out => {
       this.data.user = out
-      bl0k.setPageDetail({ title: 'Nastavení' })
+      $bl0k.setPageDetail({ title: 'Nastavení' })
       m.redraw()
     })
   },
 
   saveUsername () {
-    bl0k.request({
+    $bl0k.request({
       method: 'POST',
       url: '/settings',
       body: {
@@ -51,7 +50,7 @@ module.exports = {
       const val = this.input[k]
       data[k] = val === '' ? null : val
     }
-    bl0k.request({
+    $bl0k.request({
       method: 'POST',
       url: '/settings',
       body: { data }
@@ -67,7 +66,7 @@ module.exports = {
   },
 
   view () {
-    const auth = window.bl0k.auth
+    const auth = $bl0k.auth
     if (!auth || !auth.user || !this.data.user) {
       return m('.m-5', 'Načítám ..')
     }

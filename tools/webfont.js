@@ -9,6 +9,7 @@ const iconsList = [
   'solid/link',
   'solid/edit',
   'solid/trash-alt',
+  'solid/gas-pump',
   'brands/facebook-f',
   'brands/twitter',
   ['src/assets/images/logo-blok', 'bl0k'],

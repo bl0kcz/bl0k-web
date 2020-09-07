@@ -1,146 +1,25 @@
-/* globals localStorage, web3, alert, ethereum, confirm, WebSocket */
-const m = require('mithril')
-const qs = require('querystring')
-const $ = require('jquery')
-const currency = require('currency.js')
-const { select: d3select } = require('d3-selection')
-const { scaleLinear: d3scaleLinear } = require('d3-scale')
-const { line: d3line } = require('d3-shape')
+const { $bl0k, m } = require('./lib/bl0k')
 
+const { SimpleHeader } = require('./components/Headers')
 const Console = require('./components/console')
-const { BaseHeader, SimpleHeader } = require('./components/headers')
-const ArticleContent = require('./components/ArticleContent')
-const Infobar = require('./components/Infobar')
+const App = require('./components/App')
 
-const options = {
+m.route.prefix = ''
+
+$bl0k.init({
   apiUrl: 'https://api.bl0k.cz/1',
   apiWsUrl: 'wss://api.bl0k.cz/wss',
   title: 'bl0k.cz - Rychlé zprávy z kryptoměn',
   titleSuffix: 'bl0k.cz',
   desc: 'Komunitní zpravodajský server zaměřený na krátké technologické zprávy ze světa kryptoměn.'
+})
+
+if (process.env.NODE_ENV !== 'production') {
+  // only dev
+  window.$bl0k = $bl0k
 }
 
-m.route.prefix = ''
-
-let opts = {}
-let dataLoading = false
-let data = {
-  articles: [],
-  article: null,
-  header: null,
-  important: [],
-  chains: {},
-  menu: [],
-  infobar: {},
-  online: {}
-}
-
-const loadStatus = {
-  items: [],
-  start: function (j) { this.items.push(j) },
-  end: function (j) { this.items.pop(j) },
-  active: function () { return this.items.length > 0 }
-}
-
-const Tooltip = {
-  view (vnode) {
-    const tt = vnode.attrs.data
-    const style = `z-index: 1; top: ${tt.top || 0}px; left: ${tt.left || 0}px; width: 400px;`
-    return m('#bl0k-tooltip.absolute.border.py-1.px-2.bg-white.shadow.shadow-lg.rounded.transition-all.duration-300.ease-in-out', {
-      style,
-      onclick: () => {
-        window.bl0k.symbolTooltipHide()
-      }
-    }, tt.content)
-  }
-}
-
-const Sparkline = {
-  oncreate (vnode) {
-    const src = vnode.attrs.data
-    const DATA_COUNT = src.length
-    const WIDTH = 100
-    const HEIGHT = 37
-
-    this.svg = d3select(vnode.dom).append('svg')
-      .attr('width', WIDTH)
-      .attr('height', HEIGHT)
-
-    const min = Math.min(...src)
-    const max = Math.max(...src)
-    const positive = Boolean((src[src.length - 1] - src[0]) > 0)
-    // console.log(JSON.stringify(src), src.length, src[src.length], src[0], src[src.length] - src[0])
-
-    const x = d3scaleLinear().domain([0, DATA_COUNT]).range([0, WIDTH])
-    const y = d3scaleLinear().domain([min, max]).range([HEIGHT, 0])
-    const line = d3line().x((d, i) => x(i)).y(d => y(d))
-
-    this.svg.append('path').datum(src)
-      .attr('fill', 'none')
-      .attr('stroke', positive ? '#2f855a' : '#c53030')
-      .attr('stroke-width', 1)
-      .attr('d', line)
-  },
-  view () {
-    return m('.border.border-gray-200')
-  }
-}
-
-const TokenTooltip = {
-  view (vnode) {
-    const d = vnode.attrs.data
-    if (!d) {
-      return m('div', 'Token nenalezen')
-    }
-    return m('.w-auto', [
-      m('.flex', [
-        m('.mt-1.h-full', [
-          m('.block.w-10', [
-            m('img.h-10', { src: d.image.large })
-          ])
-        ]),
-        m('.w-full', [
-          m('.flex.items-center', [
-            m('.ml-2.text-lg.font-bold', d.name),
-            m('.ml-2', '(' + d.symbol.toUpperCase() + ')')
-          ]),
-          m('div', [
-            m('.mt-1.ml-2.flex.items-center.w-full', [
-              m('.block.w-1/3.pr-1', [
-                m('.font-bold', bl0k.formatAmount(d.market_data.current_price.usd)),
-                m('.text-sm.text-gray-700', '(' + bl0k.formatAmount(d.market_data.current_price.czk, 2, 'czk') + ')')
-              ]),
-              m('.block.w-1/3.flex.justify-center.text-center', [
-                m('.block', [
-                  m('.inline-block', { class: `text-sm text-${d.market_data.price_change_percentage_24h > 0 ? 'green' : 'red'}-700` }, [(d.market_data.price_change_percentage_24h > 0 ? '+' : '') + (Math.round(((d.market_data.price_change_percentage_24h) * 100)) / 100) + '% ', m('span.text-xs', '(24h)')]),
-                  m('.inline-block', { class: `text-sm text-${d.market_data.price_change_percentage_7d > 0 ? 'green' : 'red'}-700` }, [(d.market_data.price_change_percentage_7d > 0 ? '+' : '') + (Math.round(((d.market_data.price_change_percentage_7d) * 100)) / 100) + '% ', m('span.text-xs', '(7d)')])
-                ])
-              ]),
-              m('.block.w-1/3', [
-                m('div', [
-                  m('.flex.justify-end.mr-3', m(Sparkline, { data: d.market_data.sparkline_7d.price }))
-                ])
-              ])
-            ])
-          ])
-        ]),
-        m('div', [
-          m('div', [
-          ]),
-          m('div', [
-          ])
-        ])
-      ]),
-      // m('.mt-2.text-sm', d.description.en)
-      m('.mx-1.my-2.text-sm', [
-        // m('div', `Zásoba v oběhu: ${d.market_data.circulating_supply}`),
-        m('div', `Tržní kapitalizace: ${bl0k.formatAmount(d.market_data.market_cap.usd, 0)}`),
-        d.market_data.fully_diluted_valuation.usd ? m('div', `FDV: ${bl0k.formatAmount(d.market_data.fully_diluted_valuation.usd)}`) : ''
-      ])
-    ])
-  }
-}
-
+/*
 const bl0k = window.bl0k = {
   auth: null,
   tooltip: null,
@@ -155,9 +34,6 @@ const bl0k = window.bl0k = {
     }
     ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
       const addr = accounts[0]
-      /* web3.eth.sign(window.bl0k.ethAccount, 'xxx', (err, res) => {
-        console.log(err, res)
-      }) */
       const msg = `Přihlášení na bl0k.cz [${Number(new Date())}]`
       const cmd = { method: 'personal_sign', params: [msg, addr], from: addr }
       web3.currentProvider.sendAsync(cmd, (err, res) => {
@@ -189,11 +65,6 @@ const bl0k = window.bl0k = {
         })
       })
     })
-    return false
-  },
-  logout () {
-    localStorage.removeItem('auth')
-    document.location = '/'
     return false
   },
   deleteArticle (item) {
@@ -286,16 +157,6 @@ const bl0k = window.bl0k = {
       return `<span class="bl0k-symbol border border-t-0 border-l-0 border-r-0 border-gray-500 border-dotted" onmouseenter="bl0k.symbolTooltip(this, '${m}')" onmouseout="bl0k.symbolTooltipHide()" style="cursor: help;">${m}</span>`
     })
   },
-  initAuth () {
-    const auth = localStorage.getItem('auth')
-    if (auth) {
-      window.bl0k.auth = JSON.parse(auth)
-      this.request('/me').then(user => {
-        this.auth.user = user
-        m.redraw()
-      })
-    }
-  },
   reconnectWs () {
     console.log('trying reconnect ..')
     this.initWs()
@@ -346,7 +207,7 @@ const bl0k = window.bl0k = {
     }
   },
   init () {
-    this.initAuth()
+    //this.initAuth()
     this.initWs()
   },
   formatAmount (amount, precision = 2, preset = 'usd') {
@@ -360,90 +221,12 @@ const bl0k = window.bl0k = {
 
 bl0k.init()
 
-function shortSentences (str, max = 100) {
-  if (str.length < max) {
-    return str
-  }
-  const out = []
-  let count = 0
-  for (const s of str.split(' ')) {
-    count += s.length + 1
-    if (count > max) {
-      break
-    }
-    out.push(s)
-  }
-  return out.join(' ') + '..'
-}
-
 function loadData (refresh = false) {
-  dataLoading = true
-  loadStatus.start('bundle')
-  if (refresh) {
-    data.articles = []
-    data.important = []
-    data.header = null
-    m.redraw()
-  }
-  const query = {}
-  if (opts.chain) {
-    query.chain = opts.chain
-  }
-  if (opts.topic) {
-    query.tag = opts.topic
-  }
-  window.bl0k.request(`${options.apiUrl}/bundle?${qs.stringify(query)}`).then(out => {
-    dataLoading = false
-    if (!out) {
-      return null
-    }
-    data = out
-
-    window.bl0k.setPageDetail({
+  $bl0k.fetchData('bundle', opts).then(out => {
+    $bl0k.setPageDetail({
       title: (out.header && out.header.data && (opts.chain || opts.topic)) ? out.header.data.title : null
     })
-
-    m.redraw()
-
-    setTimeout(() => {
-      loadStatus.end('bundle')
-    })
-
-    data.menu = [
-      { chainId: 'all', url: '/', chain: { name: 'Vše' } }
-    ]
-    for (const chainId of Object.keys(data.chains)) {
-      const chain = data.chains[chainId]
-      if (!chain.major) {
-        continue
-      }
-      data.menu.push({ chainId: chainId, chain, url: `/${chain.name.toLowerCase()}` })
-    }
-    data.menu.push({ chainId: 'oth', chain: { name: 'Ostatní' } })
-
-    const topics = [
-      ['DeFi']
-    ]
-    for (const t of topics) {
-      data.menu.push({ url: `/t/${t[0]}`, title: '#' + (t[1] || t[0]) })
-    }
   })
-}
-
-const Header = {
-  view: (vnode) => {
-    return m(BaseHeader, m('.text-sm', data.menu.map(mi => {
-      const name = mi.title || mi.chain.name
-      /* if (mi.chain.ico) {
-        name = [ m(`i.pr-1.${mi.chain.ico}`, { style: 'font-family: cryptofont' } ), name ]
-      } */
-      const selChain = vnode.attrs.chain
-      if ((selChain && (selChain === mi.chainId || selChain === name.toLowerCase())) || (mi.chainId === 'all' && !selChain)) {
-        return m('span.underline.font-semibold.pr-3', name)
-      }
-      return m('.hidden.sm:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'mr-3 py-4 hover:underline' }, name))
-    })))
-  }
 }
 
 let selected = null
@@ -454,146 +237,18 @@ function selectItem (id) {
       classes.includes('bl0k-symbol') ||
       classes.includes('bl0k-no-click')
     ) {
-      /* if ($('#bl0k-tooltip').get(0)) {
-        window.bl0k.symbolTooltipHide()
-      } */
       return true
     }
     selected = (selected === id) ? null : id
     console.log('Selected: ' + selected)
     return false
   }
-}
-
-const InfoPanel = {
-  view () {
-    return m('.p-5', [
-      m('.bg-teal-100.border-t-4.border-teal-500.rounded-b.text-teal-900.px-4.py-3', { role: 'alert' }, [
-        m('.flex', [
-          m('.py-1', m('svg.fill-current.h-6.w-6.text-teal-500.mr-4', { xmlns: 'http://www.w3.org/2000/svg', viewBox: '0 0 20 20' }, m('path', { d: 'M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z' }))),
-          m('div', [
-            m('p.text-2xl', 'Zkušební režim'),
-            // m('p.font-bold', 'Vítejte na bl0k.cz!'),
-            m('p.text-sm', [
-              // 'Toto je zkušební provoz. ',
-              'Již brzy vám začneme přinášet aktuální zprávy z kryptoměn. ',
-              m(m.route.Link, { class: 'underline', href: '/p/o-nas' }, 'Co je to Bl0k.cz?')
-            ])
-          ])
-        ])
-      ])
-    ])
-  }
-}
-
-const Feed = {
-  view: (vnode) => {
-    if (dataLoading) {
-      return m('.p-5', 'Načítám obsah ...')
-    }
-    const items = vnode.attrs.items
-    const important = vnode.attrs.important
-    const maxi = vnode.attrs.maxi
-    if (items.length === 0) {
-      return m('.p-5', 'Nenalezeny žádné zprávy.')
-    }
-    return m('div', [
-      (opts.chain || opts.topic || important || window.bl0k.auth) ? '' : m(InfoPanel),
-      m('div', items.map(i => {
-        const bg = ((type) => {
-          switch (type) {
-            case 'draft':
-              return 'bg-orange-200'
-            case 'in-queue':
-              return 'bg-blue-200'
-          }
-          return ''
-        })(i.type)
-        return m(`article.${important ? '' : 'lg:flex.'}.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed.${bg || ''}`,
-          { key: i.id, onclick: selectItem(`${maxi ? 'ax' : 'a'}:${i.id}`) }, m(ArticleContent, { item: i, maxi, important, selected }))
-      }))
-    ])
-  }
-}
-
-const FeedHeader = {
-  view (vnode) {
-    const h = vnode.attrs.data.header
-    if (!h || !h.data) {
-      return null
-    }
-    return m('.bg-gray-200', [
-      m('.px-5.py-3.border.border-t-0.border-l-0.border-r-0', [
-        m('h2.text.font-semibold.text-md', h.data.title),
-        h.type === 'topic' ? [
-          /* h.data.tags ? m('.mt-2', [
-            m('.text-sm', [
-              'Tagy: ',
-              h.data.tags.map(t => `#${t}`).join(', ')
-            ])
-          ]) : '' */
-        ] : ''
-      ])
-    ])
-  }
-}
-
-const TwoPanesFeed = {
-  view (vnode) {
-    if (!data.articles) {
-      return m('.m-5', 'Načítám obsah ...')
-    }
-    return [
-      m(FeedHeader, { data, query: vnode.attrs }),
-      m(Feed, { maxi: true, items: data.articles })
-    ]
-  }
-}
-
-const App = {
-  oninit: (vnode) => {
-    opts = vnode.attrs
-    loadData()
-  },
-  onupdate: (vnode) => {
-    // console.log('@', JSON.stringify(opts), JSON.stringify(vnode.attrs))
-    if (JSON.stringify(opts) !== JSON.stringify(vnode.attrs)) {
-      console.log('x', opts, vnode.attrs)
-      opts = vnode.attrs
-      loadData(true)
-    }
-  },
-  onremove: () => {
-    opts = {}
-    selected = null
-  },
-  view: (vnode) => {
-    return [
-      m(Infobar),
-      m('header.flex.h-12.bg-gray-100.items-center.border.border-t-0.border-l-0.border-r-0', m(Header, vnode.attrs)),
-      m('section.absolute.left-0.right-0.bottom-0.mt-20.top-0', [
-        m('section.absolute.top-0.bottom-0.left-0.w-full.lg:w-4/6', [
-          m('div.absolute.inset-0', [
-            m('div.absolute.inset-0.overflow-hidden', [
-              m('div.absolute.inset-0.overflow-scroll.pb-10', m(TwoPanesFeed, vnode.attrs))
-            ])
-          ])
-        ]),
-        m('section.absolute.inset-y-0.right-0.bg-gray-200.hidden.lg:block.w-2/6.border.border-t-0.border-r-0.border-b-0', [
-          m('h2.px-5.pt-3.pb-3.font-bold.text-lg.border.border-t-0.border-l-0.border-r-0.border-dashed', 'Důležité zprávy'),
-          m('div.overflow-hidden.absolute.left-0.right-0.bottom-0', { style: 'top: 3.5rem;' }, [
-            m('div.overflow-scroll.absolute.inset-0.pb-10', m(Feed, { important: true, items: data.important }))
-          ])
-        ])
-      ])
-    ]
-  }
-}
+} */
 
 function consoleComponentRoute (cmp) {
   return {
     render: (vnode) => {
-      return m(Console.Layout, { options }, m(Console[cmp], vnode.attrs))
+      return m(Console.Layout, m(Console[cmp], vnode.attrs))
     }
   }
 }
@@ -607,23 +262,14 @@ const Layout = {
   }
 }
 
-const Core = {
-  view (vnode) {
-    return m('div', [
-      // bl0k.tooltip ? m(Tooltip, { data: bl0k.tooltip }) : '',
-      m('div', vnode.children)
-    ])
-  }
-}
-
 function componentRoute (cmp, layout = true) {
   return {
     render: (vnode) => {
       let out = m(cmp, vnode.attrs)
       if (layout) {
-        out = m(Layout, { options }, out)
+        out = m(Layout, out)
       }
-      return m(Core, out)
+      return out
     }
   }
 }

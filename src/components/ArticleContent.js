@@ -1,6 +1,5 @@
 
-const m = require('mithril')
-const { formatDate } = require('../lib/utils')
+const { $bl0k, m } = require('../lib/bl0k')
 
 function articleLink (item, text) {
   return m(m.route.Link, { href: item.url, class: 'hover:underline' }, text)
@@ -19,7 +18,7 @@ function tagsTopic (tags, article = {}) {
 const DetailBox = {
   view (vnode) {
     const item = vnode.attrs.item
-    const auth = window.bl0k.auth
+    const auth = $bl0k.auth
     const admin = auth && (auth.user && auth.user.admin)
     const allowModify = auth && (auth.userId === item.author.id || admin)
     const fullUrl = 'https://bl0k.cz/' + item.sid
@@ -104,7 +103,7 @@ module.exports = {
     this.typeBadge = i.type !== 'public' ? m('.inline-block.px-2.py-1.mb-2.mr-5.rounded-md.' + types[i.type].color, types[i.type].text) : ''
 
     let baseHtml = i.html.trim().match(/^<p>([\s\S]*?)<\/p>$/m)[1]
-    baseHtml = window.bl0k.tooltipProcess(baseHtml)
+    baseHtml = $bl0k.tooltipProcess(baseHtml)
 
     for (const s of i.sources) {
       if (i.embeds && i.embeds[0] && i.embeds[0].meta.url === s.url) {
@@ -136,7 +135,7 @@ module.exports = {
     const parts = {
       header: m(`div.font-bold.pb-${this.standalone ? 5 : 2}.text-sm.flex`, [
         this.typeBadge,
-        m('span', articleLink(i, formatDate(i.date))),
+        m('span', articleLink(i, $bl0k.utils.formatDate(i.date))),
         m('span.pl-3', chainTopic(i.chains, this)),
         m('span.pl-3.font-normal.text-gray-700', tagsTopic(i.tags, this))
       ]),
@@ -156,7 +155,7 @@ module.exports = {
     if (this.maxi) {
       parts.header = m('.inline-block.lg:block.lg:w-1/6.text-sm.font-bold.leading-6.pr-2.pb-2.lg:pb-0', [
         this.typeBadge,
-        m('.inline-block.lg:block', articleLink(i, formatDate(i.date))),
+        m('.inline-block.lg:block', articleLink(i, $bl0k.utils.formatDate(i.date))),
         m('.inline-block.lg:block.pl-3.lg:pl-0', chainTopic(i.chains, this)),
         m('.inline-block.lg:block.pl-3.lg:pl-0.font-normal.text-gray-700', tagsTopic(i.tags, this))
       ])

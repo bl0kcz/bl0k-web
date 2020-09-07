@@ -1,8 +1,9 @@
 /* globals alert */
 
 import { formatDistanceToNow } from 'date-fns'
-const m = require('mithril')
-const { SimpleHeader } = require('./headers')
+
+const { $bl0k, m } = require('../lib/bl0k')
+const { SimpleHeader } = require('./Headers')
 const marked = require('marked')
 const FilePond = require('filepond')
 
@@ -11,7 +12,7 @@ const data = {}
 let base = null
 
 function loadBase (options) {
-  m.request(`${options.apiUrl}/base`).then(out => {
+  m.request(`${$bl0k.options.apiUrl}/base`).then(out => {
     base = out
     m.redraw()
   })
@@ -34,7 +35,7 @@ const Layout = {
 const UploadBlock = {
   oncreate (vnode) {
     FilePond.setOptions({
-      server: window.bl0k.options.apiUrl
+      server: $bl0k.options.apiUrl
     })
     this.pond = FilePond.create({
       allowMultiple: true,
@@ -77,7 +78,7 @@ const Message = {
 let article = null
 
 function loadArticle (id) {
-  window.bl0k.request(`${data.options.apiUrl}/article/${id}?compat=false`).then(out => {
+  $bl0k.request(`${$bl0k.options.apiUrl}/article/${id}?compat=false`).then(out => {
     article = out
 
     for (const col of ['text', 'tags', 'chains', 'source']) {
@@ -93,7 +94,7 @@ function loadArticle (id) {
 }
 
 function createArticle () {
-  window.bl0k.request({
+  $bl0k.request({
     method: 'POST',
     url: '/articles?compat=true',
     body: Message.toAPIObject()
@@ -109,7 +110,7 @@ function saveArticle () {
   if (!article) {
     return alert('No id!')
   }
-  window.bl0k.request({
+  $bl0k.request({
     method: 'POST',
     url: `/article/${article.id}?compat=false`,
     body: Message.toAPIObject()
@@ -169,7 +170,7 @@ const Editor = {
     const tags = Message.tags.split(',').map(i => i.trim().toLowerCase()).map(i => `#${i}`)
     const diff = articleDiff()
 
-    const auth = window.bl0k.auth
+    const auth = $bl0k.auth
 
     const saveEnabled = auth && ((this.mode === 'edit' && diff) || (this.mode === 'create' && Message.text))
 

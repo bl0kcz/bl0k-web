@@ -9,18 +9,31 @@ const jsondiffpatch = require('jsondiffpatch')
 const data = {}
 
 function loadArticle (id) {
-  const query = 'history=true&introspection=true'
-  $bl0k.request(`/article/${id}?${query}`).then(out => {
+  const finish = out => {
     data.article = out
-    const text = data.article.html.replace(/(<([^>]+)>)/gi, '')
-    $bl0k.setPageDetail({ title: text, desc: text })
-    m.redraw()
+    $bl0k.setPageDetail({ title: out.card.title, desc: out.card.description })
 
     if (m.route.get() !== data.article.url) {
       m.route.set(data.article.url)
-      return null
     }
-  })
+    m.redraw()
+  }
+
+  const blob = $bl0k.store.blob
+  if (blob && blob.article && blob.article.sid === id) {
+    console.log('Blob: ', blob)
+    finish(blob.article)
+    return null
+  }
+
+  // const query = 'history=true&introspection=true'
+
+  $bl0k.fetchData('article', { id })
+    .then(out => finish(out))
+
+  /* $bl0k.request(`/article/${id}?${query}`).then(out => {
+    finish(out)
+  }) */
 }
 
 function deleteComment (id) {
@@ -181,7 +194,7 @@ module.exports = {
           })),
           user ? '' : m('.mt-8.text-gray-700', 'Nové komentáře mohou psát jen přihlášení uživatelé.'),
           // m('.mt-5', 'Žádný komentář nenalezen'),
-          $bl0k.auth ? m('form.flex.mt-5.md:mx-2', { onsubmit: Comment.submit }, [
+          $bl0k.auth && $bl0k.auth.user ? m('form.flex.mt-5.md:mx-2', { onsubmit: Comment.submit }, [
             m('.block', m('.w-8.h-8.mr-3.mt-1.rounded-full', { style: `background: url(${$bl0k.auth.user.avatar}); background-size: 100% 100%;` })),
             m('.block.w-1/2', [
               m('textarea.w-full.form-textarea.mr-2', { oninput: Comment.setText(), onkeypress: Comment.textKey(), value: Comment.text, placeholder: 'Váš komentář ..', rows: Comment.text.split('\n').length })
@@ -225,7 +238,7 @@ module.exports = {
             ])
           }))
         ]),
-        !(user && user.admin) ? '' : m('.hidden.md:block.mt-5.lg:mt-10.', [
+        !(user && user.admin && data.article && data.article.data) ? '' : m('.hidden.md:block.mt-5.lg:mt-10.', [
           m('h2.text-lg.flex.items-center', 'Introspekce zprávy'),
           m('.block.pt-3', m(ArticleIntrospection, { item: data.article }))
         ])

@@ -1,3 +1,5 @@
+/* globals ethereum */
+
 const { $bl0k, m } = require('./lib/bl0k')
 
 const { SimpleHeader } = require('./components/Headers')
@@ -5,6 +7,7 @@ const Console = require('./components/console')
 const App = require('./components/App')
 
 m.route.prefix = ''
+ethereum.autoRefreshOnNetworkChange = false
 
 $bl0k.init({
   apiUrl: 'https://api.bl0k.cz/1',
@@ -17,6 +20,11 @@ $bl0k.init({
 if (process.env.NODE_ENV !== 'production') {
   // only dev
   window.$bl0k = $bl0k
+}
+
+if (window.bl0kBl0b) {
+  console.log('Using inline blob ..')
+  $bl0k.set('blob', window.bl0kBl0b)
 }
 
 const Layout = {

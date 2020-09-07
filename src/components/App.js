@@ -8,16 +8,13 @@ let opts = {}
 
 module.exports = {
   oninit: (vnode) => {
-    opts = vnode.attrs
-    $bl0k.fetchData('bundle', {}, { reload: true })
+    this.opts = vnode.attrs
+    $bl0k.fetchData('bundle', this.opts)
   },
   onupdate: (vnode) => {
-    // console.log('@', JSON.stringify(opts), JSON.stringify(vnode.attrs))
-    if (JSON.stringify(opts) !== JSON.stringify(vnode.attrs)) {
-      console.log('x', opts, vnode.attrs)
-      opts = vnode.attrs
-      // loadData(true)
-      $bl0k.fetchData('bundle')
+    if (JSON.stringify(this.opts) !== JSON.stringify(vnode.attrs)) {
+      this.opts = vnode.attrs
+      $bl0k.fetchData('bundle', this.opts)
     }
   },
   onremove: () => {

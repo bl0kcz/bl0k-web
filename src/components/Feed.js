@@ -26,9 +26,8 @@ const InfoPanel = {
 function selectItem (id) {
   return (e) => {
     const classes = e.target.className.split(' ')
-    if (e.target.nodeName === 'A' ||
-      classes.includes('bl0k-symbol') ||
-      classes.includes('bl0k-no-click')
+    if (e.target.nodeName === 'A' || e.target.parentElement.nodeName === 'A' ||
+      classes.includes('bl0k-symbol') || classes.includes('bl0k-no-click')
     ) {
       return true
     }

@@ -16,7 +16,7 @@ class Bl0kEngine {
     this.store = {}
     this._ws = null
     this.ws = {
-      connected: false
+      connected: null
     }
     this.dataStore = {
       objects: {},
@@ -29,9 +29,10 @@ class Bl0kEngine {
 
   async init (options) {
     this.options = options
+    setTimeout(() => this.initWs(), 2000)
+
     return Promise.all([
-      this.initAuth(),
-      this.initWs()
+      this.initAuth()
     ])
   }
 
@@ -128,26 +129,60 @@ class Bl0kEngine {
     return m.request(par)
   }
 
-  async fetchData (type = 'bundle', opts = {}) {
-    const qs = new URLSearchParams()
-    if (type === 'bundle') {
-      if (opts.chain) {
-        qs.append('chain', opts.chain)
-      }
-      if (opts.topic) {
-        qs.append('tag', opts.topic)
-      }
-    }
-    const res = await this.request(`${this.options.apiUrl}/bundle?${qs.toString()}`)
-
+  async fetchData (type = 'bundle', opts = {}, { redraw = true } = {}) {
+    let out = null
     if (type === 'bundle') {
       const dkey = [type, JSON.stringify(opts)].filter(x => x !== '{}').join(':')
-      this.dataStore.bundles[dkey] = res
-      for (const col of Object.keys(res)) {
-        this.dataStore.objects[col] = res[col]
+
+      // reset datastore
+      this.dataStore.objects.articles = null
+      this.dataStore.objects.important = null
+      this.dataStore.objects.header = null
+      m.redraw()
+
+      if (this.dataStore.bundles) {
+        const found = this.dataStore.bundles[dkey]
+        if (found) {
+          out = found
+          this.dataStore.objects.articles = out.articles
+          this.dataStore.objects.important = out.important
+          this.dataStore.objects.header = out.header
+        }
+      }
+      if (!out) {
+        m.redraw()
+        const qs = new URLSearchParams()
+        if (opts.chain) {
+          qs.append('chain', opts.chain)
+        }
+        if (opts.topic) {
+          qs.append('tag', opts.topic)
+        }
+        // await (new Promise(resolve => setTimeout(() => resolve(), 5000)))
+        const res = await this.request(`/bundle?${qs.toString()}`)
+
+        this.dataStore.bundles[dkey] = res
+        for (const col of Object.keys(res)) {
+          this.dataStore.objects[col] = res[col]
+        }
+        out = res
       }
     }
-    return res
+    if (type === 'article') {
+      if (this.dataStore.objects.articles) {
+        const found = this.dataStore.objects.articles.find(a => a.sid === opts.id)
+        if (found) {
+          out = found
+        }
+      }
+      if (!out) {
+        out = await this.request(`/article/${opts.id}`)
+      }
+    }
+    if (redraw) {
+      m.redraw()
+    }
+    return out
   }
 
   setPageDetail (input) {

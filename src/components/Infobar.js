@@ -15,15 +15,28 @@ module.exports = {
     const base = m('div.text-gray-600', '.... ... .. .')
     const online = $bl0k.data('online')
     const d = $bl0k.data('infobar')
+    const conn = $bl0k.ws.connected
+    const connColor = conn === null ? 'text-gray-500' : (conn ? 'text-green-600' : 'text-red-600')
+    const connTitle = conn === null ? 'automatické připojení po 5s' : (conn ? 'připojený' : 'odpojený')
+    const connText = conn === null ? '' : (conn ? '' : 'odpojený')
+    const right = [
+      online && online.connected ? m('.mr-3', [
+        m.trust(`<i class="fas fa-user mr-1"></i><b>${online.connected}</b>`)
+      ]) : '',
+      m('div', [
+        m(`i.fas.fa-circle.${connColor}`, { title: connTitle }),
+        connText ? m('span.hidden.md:inline-block.ml-1', connText) : ''
+      ])
+    ]
     if (!d || !d.gasnow) {
-      return this.wrap(base)
+      return this.wrap(base, right)
     }
     const ethPrice = d.cg_eth.market_data.current_price.usd
     const ethChange = Math.round(d.cg_eth.market_data.price_change_percentage_24h * 10) / 10
-    const ethChangePerc = (ethChange > 0 ? '+' : '-') + ethChange
+    const ethChangePerc = (ethChange > 0 ? '+' : '') + ethChange
     const btcPrice = d.cg_btc.market_data.current_price.usd
     const btcChange = Math.round(d.cg_btc.market_data.price_change_percentage_24h * 10) / 10
-    const btcChangePerc = (btcChange > 0 ? '+' : '-') + btcChange
+    const btcChangePerc = (btcChange > 0 ? '+' : '') + btcChange
     const ethFee = Math.round(d.gasnow.list.find(i => i.index === 500).gasPrice / 10e6) / 100
     const btcFee = Math.round(d.mempool.halfHourFee * 100) / 100
 
@@ -78,12 +91,6 @@ module.exports = {
         render: () => `<b>${ethFee}</b> Gwei<span class="hidden md:inline text-gray-500"> ~${ethFeeUSD}</span>`
         // hidden: true
       })
-    ], [
-      online && online.connected ? m('.mr-3', m.trust(`<i class="fas fa-user mr-1"></i><b>${online.connected}</b>`)) : '',
-      m('div', [
-        m(`i.fas.fa-circle.${$bl0k.ws.connected ? 'text-green-600' : 'text-red-600'}`, { title: $bl0k.ws.connected ? 'připojený' : 'odpojený' }),
-        !$bl0k.ws.connected ? m('span.hidden.md:inline-block.ml-1', 'odpojen') : m('span.hidden.md:inline-block.ml-1', $bl0k.version)
-      ])
-    ])
+    ], right)
   }
 }

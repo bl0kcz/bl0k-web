@@ -1,5 +1,3 @@
-/* globals ethereum */
-
 const { $bl0k, m } = require('./lib/bl0k')
 
 const { SimpleHeader } = require('./components/Headers')
@@ -7,7 +5,7 @@ const Console = require('./components/console')
 const App = require('./components/App')
 
 m.route.prefix = ''
-ethereum.autoRefreshOnNetworkChange = false
+window.ethereum.autoRefreshOnNetworkChange = false
 
 $bl0k.init({
   apiUrl: 'https://api.bl0k.cz/1',

@@ -1,7 +1,7 @@
 {
   "name": "bl0k-web",
-  "version": "0.4.0",
-  "description": "",
+  "version": "0.4.2",
+  "description": "Komunitní zpravodajský server zaměřený na krátké technologické zprávy ze světa kryptoměn",
   "main": "index.js",
   "scripts": {
     "bundle": "standard --fix && git add --all && git commit -m Update && git push && npm run build",
@@ -11,7 +11,7 @@
     "build-webfont": "node tools/webfont.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "bl0k.cz team",
   "license": "ISC",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",

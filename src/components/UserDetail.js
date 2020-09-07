@@ -1,7 +1,5 @@
 import { format } from 'date-fns'
-const m = require('mithril')
-
-const bl0k = window.bl0k
+const { $bl0k, m } = require('../lib/bl0k')
 
 let user = null
 
@@ -9,11 +7,11 @@ function loadUser (id) {
   user = null
   m.redraw()
 
-  bl0k.request(`/user/${id}`).then(out => {
+  $bl0k.request(`/user/${id}`).then(out => {
     user = out
 
     const un = '@' + user.username
-    bl0k.setPageDetail({
+    $bl0k.setPageDetail({
       title: user.data.fullName ? `${user.data.fullName} (${un})` : un,
       desc: user.html.replace(/(<([^>]+)>)/gi, '')
     })
@@ -42,7 +40,7 @@ module.exports = {
       return m('.m-5', 'Načítám obsah ..')
     }
 
-    const html = user.html ? bl0k.tooltipProcess(user.html) : null
+    const html = user.html ? $bl0k.tooltipProcess(user.html) : null
 
     return m('.m-5.pb-10', [
       m('.flex.w-full.justify-center', [

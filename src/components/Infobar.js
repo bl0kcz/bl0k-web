@@ -82,7 +82,7 @@ module.exports = {
       online && online.connected ? m('.mr-3', m.trust(`<i class="fas fa-user mr-1"></i><b>${online.connected}</b>`)) : '',
       m('div', [
         m(`i.fas.fa-circle.${$bl0k.ws.connected ? 'text-green-600' : 'text-red-600'}`, { title: $bl0k.ws.connected ? 'připojený' : 'odpojený' }),
-        !$bl0k.ws.connected ? m('span.hidden.md:inline-block.ml-1', 'odpojen') : m('span.hidden.md:inline-block.ml-1', 'v0.4.1')
+        !$bl0k.ws.connected ? m('span.hidden.md:inline-block.ml-1', 'odpojen') : m('span.hidden.md:inline-block.ml-1', $bl0k.version)
       ])
     ])
   }

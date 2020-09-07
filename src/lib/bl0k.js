@@ -1,15 +1,17 @@
-/* globals localStorage, web3, alert, ethereum, WebSocket */
+/* globals localStorage, WebSocket */
 
 const m = require('mithril')
 const $ = require('jquery')
 
 const utils = require('./utils')
+const makeActions = require('./actions')
 const pkg = require('../../package.json')
 
 class Bl0kEngine {
   constructor () {
     this.pkg = pkg
     this.version = this.pkg.version
+    this.actions = makeActions({ $bl0k: this, m, $ })
     this.utils = utils
     this.store = {}
     this._ws = null
@@ -104,6 +106,10 @@ class Bl0kEngine {
     return this.dataStore.objects[col]
   }
 
+  set (key, value) {
+    this.store[key] = value
+  }
+
   request (props) {
     const par = {}
     if (typeof (props) === 'string') {
@@ -152,57 +158,6 @@ class Bl0kEngine {
     document.title = (title ? (title + ' - ' + this.options.titleSuffix) : this.options.title)
     document.getElementsByTagName('meta')['og:title'].content = title
     document.getElementsByTagName('meta')['og:description'].content = desc || this.options.desc
-  }
-
-  set (key, value) {
-    this.store[key] = value
-  }
-
-  ethLogin () {
-    if (!window.ethereum) {
-      alert('Nemáte nainstalovanou MetaMask!')
-      return false
-    }
-    ethereum.request({ method: 'eth_requestAccounts' }).then(accounts => {
-      const addr = accounts[0]
-      const msg = `Přihlášení na bl0k.cz [${Number(new Date())}]`
-      const cmd = { method: 'personal_sign', params: [msg, addr], from: addr }
-      web3.currentProvider.sendAsync(cmd, (err, res) => {
-        if (err) {
-          console.log('Chyba při podpisu')
-          console.error(err)
-          return false
-        }
-        this.request({
-          url: '/eth-login',
-          method: 'POST',
-          body: { addr, msg, sign: res.result }
-
-        }).then((out) => {
-          if (out.error) {
-            alert(out.error)
-            return false
-          }
-
-          localStorage.setItem('auth', JSON.stringify(out))
-          this.initAuth()
-          m.redraw()
-
-          const rt = m.route.get()
-          // console.log(rt)
-          if (rt.match(/^\/chain/) || rt === '/') {
-            // loadData(true)
-          }
-        })
-      })
-    })
-    return false
-  }
-
-  logout () {
-    localStorage.removeItem('auth')
-    document.location = '/'
-    return false
   }
 
   tooltipProcess (html) {

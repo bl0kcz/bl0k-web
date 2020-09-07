@@ -23,6 +23,21 @@ const InfoPanel = {
   }
 }
 
+function selectItem (id) {
+  return (e) => {
+    const classes = e.target.className.split(' ')
+    if (e.target.nodeName === 'A' ||
+      classes.includes('bl0k-symbol') ||
+      classes.includes('bl0k-no-click')
+    ) {
+      return true
+    }
+    $bl0k.set('feed.selected', ($bl0k.store['feed.selected'] === id) ? null : id)
+    console.log('Selected: ' + $bl0k.store['feed.selected'])
+    return false
+  }
+}
+
 const Feed = {
   view: (vnode) => {
     if (!vnode.attrs.items) {
@@ -47,8 +62,9 @@ const Feed = {
           }
           return ''
         })(i.type)
+        const fid = `${maxi ? 'ax' : 'a'}:${i.id}`
         return m(`article.${important ? '' : 'lg:flex.'}.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed.${bg || ''}`,
-          { key: i.id, onclick: () => $bl0k.set('feed.selected', `${maxi ? 'ax' : 'a'}:${i.id}`) }, m(ArticleContent, { item: i, maxi, important, selected: $bl0k.store.selected }))
+          { key: i.id, onclick: selectItem(fid) }, m(ArticleContent, { item: i, maxi, important, selected: $bl0k.store['feed.selected'] }))
       }))
     ])
   }

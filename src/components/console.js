@@ -12,7 +12,7 @@ const data = {}
 let base = null
 
 function loadBase (options) {
-  m.request(`${$bl0k.options.apiUrl}/base`).then(out => {
+  $bl0k.request('/base').then(out => {
     base = out
     m.redraw()
   })
@@ -78,7 +78,7 @@ const Message = {
 let article = null
 
 function loadArticle (id) {
-  $bl0k.request(`${$bl0k.options.apiUrl}/article/${id}?compat=false`).then(out => {
+  $bl0k.request(`/article/${id}?compat=false`).then(out => {
     article = out
 
     for (const col of ['text', 'tags', 'chains', 'source']) {

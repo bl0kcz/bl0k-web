@@ -112,7 +112,7 @@ const AuthPart = {
   view () {
     const auth = $bl0k.auth
     if (!auth) {
-      return m('a.hover:underline', { onclick: () => $bl0k.ethLogin(), href: '#' }, 'Přihlásit')
+      return m('a.hover:underline', { onclick: $bl0k.actions.ethLogin, href: '#' }, 'Přihlásit')
     }
     const username = auth.username.length > 10
       ? auth.username.substring(0, 6) + '...' + auth.username.substring(38)
@@ -128,7 +128,7 @@ const AuthPart = {
           m('.w-32.h-auto.border.rounded.shadow', [
             m(m.route.Link, { href: `/u/${auth.user.username}`, class: 'hover:underline block px-3 py-1 flex-no-wrap mt-1' }, 'Zobrazit profil'),
             m(m.route.Link, { href: '/settings', class: 'hover:underline block px-3 py-1 flex-no-wrap' }, 'Nastavení'),
-            m('a', { onclick: $bl0k.logout, href: '#', class: 'hover:underline block px-3 py-1 mb-1' }, 'Odhlásit')
+            m('a', { onclick: $bl0k.actions.logout, href: '#', class: 'hover:underline block px-3 py-1 mb-1' }, 'Odhlásit')
           ])
         ])
       ]),

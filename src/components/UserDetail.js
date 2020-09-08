@@ -37,7 +37,7 @@ module.exports = {
 
   view () {
     if (!user) {
-      return m('.m-5', 'Načítám obsah ..')
+      return m('.m-5.w-full.text-center', 'Načítám obsah ..')
     }
 
     const html = user.html ? $bl0k.tooltipProcess(user.html) : null

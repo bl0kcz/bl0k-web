@@ -133,11 +133,11 @@ module.exports = {
     // const embedAllowed = !this.important || i.importantEmbed === true
 
     const parts = {
-      header: m(`div.font-bold.pb-${this.standalone ? 5 : 2}.text-sm.flex`, [
+      header: m(`div.font-bold.${this.standalone ? 'pb-5' : 'pb-2'}.text-sm.flex.flex-wrap.w-full`, [
         this.typeBadge,
-        m('span', articleLink(i, $bl0k.utils.formatDate(i.date))),
-        m('span.pl-3', chainTopic(i.chains, this)),
-        m('span.pl-3.font-normal.text-gray-700', tagsTopic(i.tags, this))
+        m('.whitespace-no-wrap', articleLink(i, $bl0k.utils.formatDate(i.date))),
+        m('.pl-3', chainTopic(i.chains, this)),
+        m('.pl-3.font-normal.text-gray-700', tagsTopic(i.tags, this))
       ]),
       content: [
         m('.content', m('.break-words', this.htmlArr)),
@@ -148,18 +148,18 @@ module.exports = {
           }
         })),
         // i.embed && i.embed.tweet && embedAllowed ? m('div.flex.justify-center.mt-1', [m('.pt-0', m.trust(i.embed.tweet))]) : '',
-        (vnode.attrs.selected === `${this.maxi ? 'ax' : 'a'}:${i.id}` || this.standalone || i.type !== 'public') ? m(`.pt-${this.standalone ? 2 : 0}`, m(DetailBox, { item: i, standalone: this.standalone })) : ''
+        (vnode.attrs.selected === `${this.maxi ? 'ax' : 'a'}:${i.id}` || this.standalone || i.type !== 'public') ? m(`.${this.standalone ? 'pt-2' : 'pt-0'}`, m(DetailBox, { item: i, standalone: this.standalone })) : ''
       ]
     }
 
     if (this.maxi) {
       parts.header = m('.inline-block.lg:block.lg:w-1/6.text-sm.font-bold.leading-6.pr-2.pb-2.lg:pb-0', [
         this.typeBadge,
-        m('.inline-block.lg:block', articleLink(i, $bl0k.utils.formatDate(i.date))),
+        m('.inline-block.lg:block.whitespace-no-wrap', articleLink(i, $bl0k.utils.formatDate(i.date))),
         m('.inline-block.lg:block.pl-3.lg:pl-0', chainTopic(i.chains, this)),
         m('.inline-block.lg:block.pl-3.lg:pl-0.font-normal.text-gray-700', tagsTopic(i.tags, this))
       ])
-      parts.content = m('.inline-block.lg:block.lg:w-5/6', parts.content)
+      parts.content = m('.inline-block.w-full.lg:w-auto.lg:block.lg:w-5/6', parts.content)
     }
 
     return [parts.header, parts.content]

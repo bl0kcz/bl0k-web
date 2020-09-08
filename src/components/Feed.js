@@ -51,7 +51,7 @@ const Feed = {
     }
     return m('div', [
       (opts.chain || opts.topic || important || $bl0k.auth) ? '' : m(InfoPanel),
-      m('div', items.map(i => {
+      items.map(i => {
         const bg = ((type) => {
           switch (type) {
             case 'draft':
@@ -62,9 +62,13 @@ const Feed = {
           return ''
         })(i.type)
         const fid = `${maxi ? 'ax' : 'a'}:${i.id}`
-        return m(`article.${important ? '' : 'lg:flex.'}.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed.${bg || ''}`,
-          { key: i.id, onclick: selectItem(fid) }, m(ArticleContent, { item: i, maxi, important, selected: $bl0k.store['feed.selected'] }))
-      }))
+        return m('.h-full.w-full.bg-gradient-to-b.bg-transparent.hover:to-gray-200.hover:from-white.transition-all.duration-500.ease-in-out',
+          m(`article.${important ? '' : 'lg:flex.'}.p-5.border.border-t-0.border-l-0.border-r-0.border-dashed.${bg || ''}`,
+            { key: i.id, onclick: selectItem(fid) },
+            m(ArticleContent, { item: i, maxi, important, selected: $bl0k.store['feed.selected'] })
+          )
+        )
+      })
     ])
   }
 }

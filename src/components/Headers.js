@@ -100,7 +100,7 @@ const Logo = {
   view (vnode) {
     return m('.mx-5',
       m(m.route.Link, { href: '/', style: 'font-family: monospace;', title: 'bl0k.cz' },
-        m('i.fax.fa-bl0k', { style: 'font-size: 1.63rem; margin-top: 3px;' })
+        m('.fax.fa-bl0k.transition.duration-300.ease-in-out.hover:text-red-700.hover:shadow', { style: 'font-size: 1.63rem; margin-top: 3px;' })
       )
       // m('img.h-8', { src: logoImage, alt: 'bl0k.cz' }))
     )

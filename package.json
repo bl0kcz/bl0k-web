@@ -6,7 +6,7 @@
   "scripts": {
     "bundle": "standard --fix && git add --all && git commit -m Update && git push && npm run build",
     "start": "parcel -p 5678 --hmr-port 5679 --cert /usr/local/etc/ssl/lego/certificates/indigo.bl0k.cz.crt --key /usr/local/etc/ssl/lego/certificates/indigo.bl0k.cz.key src/index.html",
-    "build": "parcel build -d deploy_build_tmp src/index.html && echo 'gh-mirror.bl0k.cz' > deploy_build_tmp/CNAME && cp src/robots.txt src/favicon.ico deploy_build_tmp && rm -rf deploy_build && mv deploy_build_tmp deploy_build",
+    "build": "parcel build -d deploy_build_tmp src/index.html && uuidgen > deploy_build_tmp/build-uuid.txt && echo 'gh-mirror.bl0k.cz' > deploy_build_tmp/CNAME && cp src/robots.txt src/favicon.ico deploy_build_tmp && rm -rf deploy_build && mv deploy_build_tmp deploy_build",
     "build-ipfs": "parcel build --public-url '/ipfs/' -d deploy_ipfs src/index.html",
     "build-webfont": "node tools/webfont.js",
     "test": "echo \"Error: no test specified\" && exit 1"

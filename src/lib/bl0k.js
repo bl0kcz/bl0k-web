@@ -130,6 +130,7 @@ class Bl0kEngine {
   }
 
   async fetchData (type = 'bundle', opts = {}, { redraw = true } = {}) {
+    console.log(`fetchData:${type} = ${JSON.stringify(opts)}`)
     let out = null
     if (type === 'bundle') {
       const dkey = [type, JSON.stringify(opts)].filter(x => x !== '{}').join(':')

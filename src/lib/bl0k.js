@@ -280,7 +280,7 @@ class Bl0kEngine {
       if (!out) {
         m.redraw()
         // await (new Promise(resolve => setTimeout(() => resolve(), 5000)))
-        const res = await $bl0k.uniRequest('bundle', { query: { chain: opts.chain, tag: opts.tag } })
+        const res = await $bl0k.uniRequest('bundle', { query: { chain: opts.chain, tag: opts.topic } })
         if (!res) {
           return null
         }

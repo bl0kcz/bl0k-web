@@ -21,7 +21,7 @@ function loadArticle (id) {
 
   const blob = $bl0k.store.blob
   if (blob && blob.article && blob.article.sid === id) {
-    console.log('Blob: ', blob)
+    $bl0k.dataObjectUpdate('articles', blob.article.id, blob.article)
     finish(blob.article)
     return null
   }

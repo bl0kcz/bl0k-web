@@ -8,23 +8,10 @@ module.exports = {
     this.input = null
     this.inputUsername = null
     this.inputErrorCols = []
-    this.data = {}
-    this.loadUser()
-  },
-
-  loadUser (reload = true) {
-    this.input = null
-    this.inputUsername = null
-    this.data = {}
-    m.redraw()
-
-    $bl0k.request({
-      url: '/me'
-    }).then(out => {
-      this.data.user = out
-      $bl0k.setPageDetail({ title: 'Nastavení' })
-      m.redraw()
-    })
+    // this.data = {}
+    // this.loadUser()
+    $bl0k.setPageDetail({ title: 'Nastavení' })
+    $bl0k.fetchData('me')
   },
 
   saveUsername () {
@@ -39,7 +26,7 @@ module.exports = {
         this.usernameError = out.error
         return null
       }
-      this.loadUser(true)
+      $bl0k.fetchData('me', {}, { reload: true })
     })
     return false
   },
@@ -60,17 +47,17 @@ module.exports = {
         this.inputErrorCols = out.errorCols
         return null
       }
-      this.loadUser(true)
+      $bl0k.fetchData('me', {}, { reload: true })
     })
     return false
   },
 
   view () {
     const auth = $bl0k.auth
-    if (!auth || !auth.user || !this.data.user) {
+    const user = $bl0k.data('me')
+    if (!auth || !user) {
       return m('.m-5', 'Načítám ..')
     }
-    const user = this.data.user
     const self = this
 
     if (!this.input) {
@@ -91,7 +78,7 @@ module.exports = {
         }
       }, user.data)
     }
-    const usernameChanged = this.inputUsername.text && this.data.user.username !== this.inputUsername.text
+    const usernameChanged = this.inputUsername.text && user.username !== this.inputUsername.text
     const inputChanged = jsondiffpatch.diff(user.data, JSON.parse(JSON.stringify(this.input)))
 
     return m('.m-5', [

@@ -81,7 +81,14 @@ const TwitterScreenEmbed = {
 
 const BaseHtml = {
   oncreate (vnode) {
-    vnode.dom.innerHTML = vnode.attrs.text
+    this.current = vnode.attrs.text
+    vnode.dom.innerHTML = this.current
+  },
+  onupdate (vnode) {
+    if (this.current !== vnode.attrs.text) {
+      this.current = vnode.attrs.text
+      vnode.dom.innerHTML = this.current
+    }
   },
   view () {
     return m('.bl0k-base-html')
@@ -90,6 +97,17 @@ const BaseHtml = {
 
 module.exports = {
   oninit (vnode) {
+    this.initData(vnode)
+  },
+
+  onupdate (vnode) {
+    if (JSON.stringify(this.item) !== JSON.stringify(vnode.attrs.item)) {
+      this.initData(vnode)
+      m.redraw()
+    }
+  },
+
+  initData (vnode) {
     this.item = vnode.attrs.item
     this.important = vnode.attrs.important
     this.maxi = vnode.attrs.maxi
@@ -128,6 +146,7 @@ module.exports = {
       this.htmlArr.push(m('.inline.ml-3.text-sm.whitespace-no-wrap', ['💬 ', m(m.route.Link, { href: i.url, class: 'bl0k-comments-link hover:underline text-gray-700' }, `${i.comments.length} ${str}`)]))
     }
   },
+
   view (vnode) {
     const i = this.item
     // const embedAllowed = !this.important || i.importantEmbed === true

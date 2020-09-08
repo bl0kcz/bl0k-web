@@ -7,13 +7,13 @@ function loadUser (id) {
   user = null
   m.redraw()
 
-  $bl0k.request(`/user/${id}`).then(out => {
+  $bl0k.uniRequest('user', { params: { id } }).then(out => {
     user = out
 
     const un = '@' + user.username
     $bl0k.setPageDetail({
       title: user.data.fullName ? `${user.data.fullName} (${un})` : un,
-      desc: user.html.replace(/(<([^>]+)>)/gi, '')
+      desc: user.html ? user.html.replace(/(<([^>]+)>)/gi, '') : null
     })
     m.redraw()
   })

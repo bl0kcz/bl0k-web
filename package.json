@@ -17,6 +17,7 @@
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@tailwindcss/custom-forms": "^0.2.1",
     "@tailwindcss/typography": "^0.2.0",
+    "alpeventemitter": "^2.0.1",
     "autoprefixer": "^9.8.6",
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",

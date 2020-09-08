@@ -9,18 +9,9 @@ const FilePond = require('filepond')
 
 const data = {}
 
-let base = null
-
-function loadBase (options) {
-  $bl0k.request('/base').then(out => {
-    base = out
-    m.redraw()
-  })
-}
-
 const Layout = {
   oninit (vnode) {
-    loadBase(vnode.attrs.options)
+    $bl0k.fetchData('base')
     data.options = vnode.attrs.options
   },
 
@@ -151,6 +142,7 @@ const Editor = {
   },
 
   view (vnode) {
+    const base = $bl0k.data('base')
     if (!base || (this.mode === 'edit' && !article)) {
       return m('.m-5', 'Loading ..')
     }

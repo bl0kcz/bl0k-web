@@ -2,10 +2,13 @@
 
 const m = require('mithril')
 const $ = require('jquery')
+const EventEmitter = require('alpeventemitter')
 
 const utils = require('./utils')
 const makeActions = require('./actions')
 const pkg = require('../../package.json')
+
+const apiEndpoints = require('../../endpoints.yaml')
 
 class Bl0kEngine {
   constructor () {
@@ -15,6 +18,7 @@ class Bl0kEngine {
     this.utils = utils
     this.store = {}
     this._ws = null
+    this.events = new EventEmitter()
     this.ws = {
       connected: null
     }
@@ -29,7 +33,7 @@ class Bl0kEngine {
 
   async init (options) {
     this.options = options
-    setTimeout(() => this.initWs(), 2000)
+    setTimeout(() => this.initWs(), 0)
 
     return Promise.all([
       this.initAuth()
@@ -48,6 +52,13 @@ class Bl0kEngine {
     this._ws.onopen = () => {
       console.log(`Websocket connected: ${this.options.apiWsUrl}`)
       this.ws = { connected: true }
+
+      if (this.auth) {
+        this.wsSend('auth', this.auth.token)
+      }
+      this.fetchData('infobar')
+      this.fetchData('online')
+
       m.redraw()
     }
     this._ws.onclose = (e) => {
@@ -69,12 +80,26 @@ class Bl0kEngine {
         return null
       }
       const [type, msg] = res
-      console.log(`ws.incoming:${type}`)
+      // console.log(`ws.incoming:${type}`)
       if (type === 'update') {
         for (const key of Object.keys(msg)) {
           this.dataStore.objects[key] = msg[key]
         }
         m.redraw()
+      }
+      if (type === 'object.update' && msg.type === 'article') {
+        this.dataObjectUpdate('articles', msg.id, msg.data)
+        m.redraw()
+      }
+      if (type === 'object.remove' && msg.type === 'article') {
+        this.dataObjectDelete('articles', msg.id)
+        m.redraw()
+      }
+      if (type === 'result') {
+        if (msg.error) {
+          throw new Error(msg.error)
+        }
+        this.events.emit(`result:${msg.rid}`, msg.data)
       }
     }
   }
@@ -82,6 +107,26 @@ class Bl0kEngine {
   reconnectWs () {
     console.log('trying reconnect ..')
     this.initWs()
+  }
+
+  wsSend (type, msg) {
+    if (!this._ws) {
+      return null
+    }
+    return this._ws.send(JSON.stringify([type, msg]))
+  }
+
+  async wsRequest (type, msg) {
+    if (!this._ws) {
+      return null
+    }
+    const rid = this.genId()
+    this.wsSend(type, { rid, ...msg })
+    return new Promise(resolve => this.events.once(`result:${rid}`, resolve))
+  }
+
+  genId () {
+    return Math.random().toString(36).substr(2, 9)
   }
 
   async initAuth () {
@@ -94,17 +139,55 @@ class Bl0kEngine {
         localStorage.removeItem('auth')
         return false
       }
-      return this.request('/me').then(user => {
+      this.wsSend('auth', this.auth.token)
+      this.fetchData('me', {}, {
+        callback: (user) => {
+          this.auth.user = user
+        }
+      })
+      /* return this.request('/me').then(user => {
         this.auth.user = user
         m.redraw()
         return this.auth
-      })
+      }) */
     }
     return null
   }
 
   data (col = 'articles') {
     return this.dataStore.objects[col]
+  }
+
+  dataObject (col = 'articles', id) {
+    if (!this.dataStore.objects[col]) {
+      return null
+    }
+    return this.dataStore.objects[col].find(x => x.id === id || x.sid === id)
+  }
+
+  dataObjectUpdate (col, id, data) {
+    if (!this.dataStore.objects[col]) {
+      this.dataStore.objects[col] = []
+    }
+    const found = this.dataStore.objects[col].findIndex(x => x.id === id)
+    if (found !== -1) {
+      this.dataStore.objects[col][found] = data
+    } else {
+      this.dataStore.objects[col].push(data)
+      this.dataStore.objects[col].sort((a, b) => new Date(b.date) - new Date(a.date))
+    }
+    return true
+  }
+
+  dataObjectDelete (col, id) {
+    if (!this.dataStore.objects[col]) {
+      return null
+    }
+    const found = this.dataStore.objects[col].findIndex(x => x.id === id)
+    if (found !== -1) {
+      this.dataStore.objects[col].splice(found, 1)
+    }
+    return true
   }
 
   set (key, value) {
@@ -129,7 +212,51 @@ class Bl0kEngine {
     return m.request(par)
   }
 
-  async fetchData (type = 'bundle', opts = {}, { redraw = true } = {}) {
+  apiEndpoint (name) {
+    const endpoints = Object.keys(apiEndpoints).map(u => {
+      const e = apiEndpoints[u]
+      const [method, url] = u.split('@')
+      e.method = method
+      e.url = url
+      return e
+    })
+    return endpoints.find(x => x.handler === name)
+  }
+
+  async uniRequest (method, opts = { query: {}, params: {} }) {
+    if (!opts.query) {
+      opts.query = {}
+    }
+    if (!opts.params) {
+      opts.params = {}
+    }
+    let res
+    if (this.ws.connected) {
+      res = await $bl0k.wsRequest('call', {
+        method: method, args: [opts]
+      })
+    } else {
+      const endpoint = this.apiEndpoint(method)
+      if (!endpoint) {
+        throw new Error(`bad endpoint: ${method}`)
+      }
+      const url = endpoint.url.replace(/\{([^}]+)\}/, (_, match) => {
+        return opts.params[match]
+      })
+      const qs = new URLSearchParams()
+      for (const prop of Object.keys(opts.query)) {
+        if (opts.query[prop] === undefined) {
+          continue
+        }
+        qs.append(prop, opts.query[prop])
+      }
+      const qsString = qs.toString()
+      res = await this.request(url + (qsString ? `?${qsString}` : ''))
+    }
+    return res
+  }
+
+  async fetchData (type = 'bundle', opts = {}, { redraw = true, callback = null, reload = false } = {}) {
     console.log(`fetchData:${type} = ${JSON.stringify(opts)}`)
     let out = null
     if (type === 'bundle') {
@@ -141,7 +268,7 @@ class Bl0kEngine {
       this.dataStore.objects.header = null
       m.redraw()
 
-      if (this.dataStore.bundles) {
+      if (this.dataStore.bundles && !reload) {
         const found = this.dataStore.bundles[dkey]
         if (found) {
           out = found
@@ -152,15 +279,11 @@ class Bl0kEngine {
       }
       if (!out) {
         m.redraw()
-        const qs = new URLSearchParams()
-        if (opts.chain) {
-          qs.append('chain', opts.chain)
-        }
-        if (opts.topic) {
-          qs.append('tag', opts.topic)
-        }
         // await (new Promise(resolve => setTimeout(() => resolve(), 5000)))
-        const res = await this.request(`/bundle?${qs.toString()}`)
+        const res = await $bl0k.uniRequest('bundle', { query: { chain: opts.chain, tag: opts.tag } })
+        if (!res) {
+          return null
+        }
 
         this.dataStore.bundles[dkey] = res
         for (const col of Object.keys(res)) {
@@ -170,15 +293,32 @@ class Bl0kEngine {
       }
     }
     if (type === 'article') {
-      if (this.dataStore.objects.articles) {
+      if (this.dataStore.objects.articles && !reload) {
         const found = this.dataStore.objects.articles.find(a => a.sid === opts.id)
         if (found) {
           out = found
         }
       }
       if (!out) {
-        out = await this.request(`/article/${opts.id}`)
+        out = await $bl0k.uniRequest('article', { params: { id: opts.id } })
+        if (out) {
+          this.dataObjectUpdate('articles', opts.id, out)
+        }
       }
+    }
+    if (['me', 'infobar', 'online', 'base'].includes(type)) {
+      if (this.dataStore.objects[type] && !reload) {
+        out = this.dataStore.objects[type]
+      }
+      if (!out) {
+        out = await $bl0k.uniRequest(type)
+        if (out) {
+          this.dataStore.objects[type] = out
+        }
+      }
+    }
+    if (out && callback) {
+      callback(out)
     }
     if (redraw) {
       m.redraw()
@@ -219,7 +359,7 @@ class Bl0kEngine {
     const rectBase = base.get(0).getBoundingClientRect()
     // console.log(rect, rectBase, e.offsetTop, e.offsetLeft)
     const w = 400
-    this.request(`/symbol/${symbol}`).then(out => {
+    this.uniRequest('symbolInfo', { params: { symbol } }).then(out => {
       this.tooltipLoading = false
       this.tooltip = {
         content: m(TokenTooltip, { data: out }),

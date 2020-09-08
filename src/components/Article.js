@@ -161,22 +161,23 @@ module.exports = {
     data.article = null
   },
   view (vnode) {
-    if (!data.article) {
+    const article = $bl0k.dataObject('articles', this.id)
+    if (!article) {
       return m('.flex.w-full.justify-center.m-5', 'Loading ..')
     }
-    // const links = data.article.links
+    // const links = article.links
     const user = $bl0k.auth ? $bl0k.auth.user : null
-    const history = (user && (user.admin || data.article.author.id === user.id) && data.article.history) ? [...data.article.history].reverse() : null
+    const history = (user && (user.admin || article.author.id === user.id) && article.history) ? [...article.history].reverse() : null
 
     return m('.w-full.flex.justify-center.mb-10', [
       m('.w-full.md:w-5/6.lg:w-4/6', [
         m('.mt-3.md:mt-5.mb-3.p-3.lg:p-5.md:border.md:rounded-lg.bg-gradient-to-b.from-white.to-gray-200', [
-          m('article.text-lg.md:text-xl.mx-2.md:mx-0', m(ArticleContent, { item: data.article, standalone: true }))
+          m('article.text-lg.md:text-xl.mx-2.md:mx-0', m(ArticleContent, { item: article, standalone: true }))
         ]),
         m('.p-5', [
-          (data.article.type === 'draft' && data.article.comments.length === 0) ? '' : m('.mb-5', [
-            m('h2.text-lg', `Komentáře (${data.article.comments.length})`),
-            (data.article.comments.length < 1 && !user) ? '' : m('.pt-3', data.article.comments.map(c => {
+          (article.type === 'draft' && article.comments.length === 0) ? '' : m('.mb-5', [
+            m('h2.text-lg', `Komentáře (${article.comments.length})`),
+            (article.comments.length < 1 && !user) ? '' : m('.pt-3', article.comments.map(c => {
               const canModify = user && (c.author.id === user.id || user.admin)
               const html = $bl0k.tooltipProcess(c.html)
 
@@ -238,9 +239,9 @@ module.exports = {
               ])
             }))
           ]),
-          !(user && user.admin && data.article && data.article.data) ? '' : m('.hidden.md:block.mt-5.lg:mt-10.', [
+          !(user && user.admin && article && article.data) ? '' : m('.hidden.md:block.mt-5.lg:mt-10.', [
             m('h2.text-lg.flex.items-center', 'Introspekce zprávy'),
-            m('.block.pt-3', m(ArticleIntrospection, { item: data.article }))
+            m('.block.pt-3', m(ArticleIntrospection, { item: article }))
           ])
         ])
       ])

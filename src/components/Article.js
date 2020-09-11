@@ -150,6 +150,56 @@ const ArticleIntrospection = {
   }
 }
 
+const Comments = {
+
+  view (vnode) {
+    const user = $bl0k.auth && $bl0k.auth.user ? $bl0k.auth.user : null
+    const article = vnode.attrs.article
+
+    if (!article) {
+      return null
+    }
+
+    if (article.commentsCount > 0 && !article.comments) {
+      return m('.mt-3', 'Načítám komentáře ..')
+    }
+
+    if (!article.comments) {
+      article.comments = []
+    }
+
+    return m('div', [
+      (article.comments.length < 1 && !user) ? '' : m('.pt-3', article.comments.map(c => {
+        const canModify = user && (c.author.id === user.id || user.admin)
+        const html = $bl0k.tooltipProcess(c.html)
+
+        return m('.my-2.md:mx-2.flex.bl0k-comment.w-full.md:mt-3', [
+          m('.block', m('.w-8.h-8.mr-2.mt-2.rounded-full', { style: `background: url(${c.author.avatar}); background-size: 100% 100%;` })),
+          m('.ml-2.w-full', [
+            m('.flex.items-center', [
+              m('.inline.text-sm.font-bold', m(m.route.Link, { href: `/u/${c.author.username}`, class: 'hover:underline' }, c.author.username)),
+              m('.inline.ml-3.text-xs.text-gray-700', formatDate(c.created, true)),
+              !canModify ? '' : m('a.hover:underline.text-red-700.ml-3.text-xs.bl0k-comment-control', { onclick: deleteComment(c.id), href: '#' }, 'Smazat')
+            ]),
+            m('.mt-1.break-words.w-11/12.bl0k-comment-content.bl0k-base-html', m.trust(html))
+          ])
+        ])
+      })),
+      user ? '' : m('.mt-8.text-gray-700', 'Nové komentáře mohou psát jen přihlášení uživatelé.'),
+      // m('.mt-5', 'Žádný komentář nenalezen'),
+      $bl0k.auth && $bl0k.auth.user ? m('form.flex.mt-5.md:mx-2', { onsubmit: Comment.submit }, [
+        m('.block', m('.w-8.h-8.mr-3.mt-1.rounded-full', { style: `background: url(${$bl0k.auth.user.avatar}); background-size: 100% 100%;` })),
+        m('.block.w-1/2', [
+          m('textarea.w-full.form-textarea.mr-2', { oninput: Comment.setText(), onkeypress: Comment.textKey(), value: Comment.text, placeholder: 'Váš komentář ..', rows: Comment.text.split('\n').length })
+        ]),
+        m('.w-auto', [
+          m('button.ml-2.bg-blue-500.hover:bg-blue-700.text-white.py-2.px-4.rounded.mr-2.text-md', 'Odeslat')
+        ])
+      ]) : ''
+    ])
+  }
+}
+
 module.exports = {
 
   oninit (vnode) {
@@ -175,35 +225,9 @@ module.exports = {
           m('article.text-lg.md:text-xl.mx-2.md:mx-0', m(ArticleContent, { item: article, standalone: true }))
         ]),
         m('.p-5', [
-          (article.type === 'draft' && article.comments.length === 0) ? '' : m('.mb-5', [
-            m('h2.text-lg', `Komentáře (${article.comments.length})`),
-            (article.comments.length < 1 && !user) ? '' : m('.pt-3', article.comments.map(c => {
-              const canModify = user && (c.author.id === user.id || user.admin)
-              const html = $bl0k.tooltipProcess(c.html)
-
-              return m('.my-2.md:mx-2.flex.bl0k-comment.w-full.md:mt-3', [
-                m('.block', m('.w-8.h-8.mr-2.mt-2.rounded-full', { style: `background: url(${c.author.avatar}); background-size: 100% 100%;` })),
-                m('.ml-2.w-full', [
-                  m('.flex.items-center', [
-                    m('.inline.text-sm.font-bold', m(m.route.Link, { href: `/u/${c.author.username}`, class: 'hover:underline' }, c.author.username)),
-                    m('.inline.ml-3.text-xs.text-gray-700', formatDate(c.created, true)),
-                    !canModify ? '' : m('a.hover:underline.text-red-700.ml-3.text-xs.bl0k-comment-control', { onclick: deleteComment(c.id), href: '#' }, 'Smazat')
-                  ]),
-                  m('.mt-1.break-words.w-11/12.bl0k-comment-content.bl0k-base-html', m.trust(html))
-                ])
-              ])
-            })),
-            user ? '' : m('.mt-8.text-gray-700', 'Nové komentáře mohou psát jen přihlášení uživatelé.'),
-            // m('.mt-5', 'Žádný komentář nenalezen'),
-            $bl0k.auth && $bl0k.auth.user ? m('form.flex.mt-5.md:mx-2', { onsubmit: Comment.submit }, [
-              m('.block', m('.w-8.h-8.mr-3.mt-1.rounded-full', { style: `background: url(${$bl0k.auth.user.avatar}); background-size: 100% 100%;` })),
-              m('.block.w-1/2', [
-                m('textarea.w-full.form-textarea.mr-2', { oninput: Comment.setText(), onkeypress: Comment.textKey(), value: Comment.text, placeholder: 'Váš komentář ..', rows: Comment.text.split('\n').length })
-              ]),
-              m('.w-auto', [
-                m('button.ml-2.bg-blue-500.hover:bg-blue-700.text-white.py-2.px-4.rounded.mr-2.text-md', 'Odeslat')
-              ])
-            ]) : ''
+          ((article.type === 'draft' && user.admin !== true) && article.commentsCount === 0) ? '' : m('.mb-5', [
+            m('h2.text-lg', `Komentáře (${article.commentsCount})`),
+            m(Comments, { article })
           ]),
           (!history || history.length < 1) ? '' : m('.block.mt-5.lg:mt-10', [
             m('h2.text-lg.flex.items-center', [

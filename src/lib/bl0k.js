@@ -1,4 +1,4 @@
-/* globals localStorage, WebSocket */
+/* globals location, localStorage, WebSocket */
 
 const m = require('mithril')
 const $ = require('jquery')
@@ -17,6 +17,7 @@ class Bl0kEngine {
     this.actions = makeActions({ $bl0k: this, m, $ })
     this.utils = utils
     this.store = {}
+    this.requests = 0
     this._ws = null
     this.events = new EventEmitter()
     this.ws = {
@@ -40,6 +41,21 @@ class Bl0kEngine {
     ])
   }
 
+  checkCurrentVersion (version) {
+    const re = /\/src\.([a-f0-9]+)\.js$/
+    let current = null
+    for (const t of document.getElementsByTagName('script')) {
+      const match = t.src.match(re)
+      if (match) {
+        current = match[1]
+      }
+    }
+    console.log('Version check:', current, version)
+    if (current && current !== version) {
+      location.reload()
+    }
+  }
+
   initWs () {
     const onClose = () => {
       this.ws = { connected: false }
@@ -56,8 +72,12 @@ class Bl0kEngine {
       if (this.auth) {
         this.wsSend('auth', this.auth.token)
       }
+      this.fetchData('online').then(online => {
+        if (this.options.env === 'production') {
+          this.checkCurrentVersion(online.webLatest)
+        }
+      })
       this.fetchData('infobar')
-      this.fetchData('online')
 
       m.redraw()
     }
@@ -139,7 +159,7 @@ class Bl0kEngine {
         localStorage.removeItem('auth')
         return false
       }
-      this.wsSend('auth', this.auth.token)
+      await this.wsRequest('auth', { token: this.auth.token })
       this.fetchData('me', {}, {
         callback: (user) => {
           this.auth.user = user
@@ -169,7 +189,7 @@ class Bl0kEngine {
     if (!this.dataStore.objects[col]) {
       this.dataStore.objects[col] = []
     }
-    const found = this.dataStore.objects[col].findIndex(x => x.id === id)
+    const found = this.dataStore.objects[col].findIndex(x => x.id === id || x.sid === id)
     if (found !== -1) {
       this.dataStore.objects[col][found] = data
     } else {
@@ -195,7 +215,9 @@ class Bl0kEngine {
   }
 
   request (props) {
-    const par = {}
+    const par = {
+      extract: xhr => ({ headers: xhr.getAllResponseHeaders(), body: JSON.parse(xhr.responseText) })
+    }
     if (typeof (props) === 'string') {
       par.url = props
     } else {
@@ -209,7 +231,14 @@ class Bl0kEngine {
         authorization: `Bearer ${this.auth.token}`
       }
     }
-    return m.request(par)
+    return m.request(par).then((res, d) => {
+      if (this.requests === 0) {
+        // first request - we check frontend version
+      }
+
+      this.requests += 1
+      return res.body
+    })
   }
 
   apiEndpoint (name) {
@@ -292,21 +321,34 @@ class Bl0kEngine {
         out = res
       }
     }
-    if (type === 'article') {
-      if (this.dataStore.objects.articles && !reload) {
-        const found = this.dataStore.objects.articles.find(a => a.sid === opts.id)
+    const cols = [
+      ['article', 'articles']
+    ]
+
+    const col = cols.find(([c]) => c === type)
+    if (col) {
+      const [, dso] = col
+      if (this.dataStore.objects[dso] && !reload) {
+        const found = this.dataStore.objects[dso].find(a => a.sid === opts.id)
         if (found) {
           out = found
+
+          // we need sideload comments
+          if (found.commentsCount > 0 && !found.comments) {
+            out = await $bl0k.uniRequest(type, { params: { id: opts.id } })
+            this.dataObjectUpdate(dso, opts.id, out)
+          }
         }
       }
       if (!out) {
-        out = await $bl0k.uniRequest('article', { params: { id: opts.id } })
+        out = await $bl0k.uniRequest(type, { params: { id: opts.id } })
         if (out) {
-          this.dataObjectUpdate('articles', opts.id, out)
+          this.dataObjectUpdate(dso, opts.id, out)
         }
       }
     }
-    if (['me', 'infobar', 'online', 'base'].includes(type)) {
+
+    if (['me', 'infobar', 'online', 'base', 'groups', 'events'].includes(type)) {
       if (this.dataStore.objects[type] && !reload) {
         out = this.dataStore.objects[type]
       }

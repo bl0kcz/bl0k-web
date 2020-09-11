@@ -136,14 +136,14 @@ module.exports = {
     }
     this.htmlArr = [m(BaseHtml, { text: baseHtml })]
 
-    if (i.comments.length > 0 && !this.standalone) {
+    if (i.commentsCount > 0 && !this.standalone) {
       let str = 'komenáře'
-      if (i.comments.length === 1) {
+      if (i.commentsCount === 1) {
         str = 'komentář'
-      } else if (i.comments.length > 4) {
+      } else if (i.commentsCount > 4) {
         str = 'komentářů'
       }
-      this.htmlArr.push(m('.inline.ml-3.text-sm.whitespace-no-wrap', ['💬 ', m(m.route.Link, { href: i.url, class: 'bl0k-comments-link hover:underline text-gray-700' }, `${i.comments.length} ${str}`)]))
+      this.htmlArr.push(m('.inline.ml-3.text-sm.whitespace-no-wrap', ['💬 ', m(m.route.Link, { href: i.url, class: 'bl0k-comments-link hover:underline text-gray-700' }, `${i.commentsCount} ${str}`)]))
     }
   },
 

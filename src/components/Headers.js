@@ -24,6 +24,8 @@ const Header = {
       for (const t of topics) {
         menu.push({ url: `/t/${t[0]}`, title: '#' + (t[1] || t[0]) })
       }
+
+      // menu.push({ url: `/komunity`, title: 'Komunity' })
     }
 
     return m(BaseHeader, m('.text-sm', menu.map(mi => {
@@ -127,7 +129,7 @@ const AuthPart = {
         m('.bg-white.absolute', { style: 'top: 4.7rem; right: 1rem; z-index: 1;' }, [
           m('.w-32.h-auto.border.rounded.shadow', [
             m(m.route.Link, { href: `/u/${auth.user.username}`, class: 'hover:underline block px-3 py-1 flex-no-wrap mt-1' }, 'Zobrazit profil'),
-            m(m.route.Link, { href: '/settings', class: 'hover:underline block px-3 py-1 flex-no-wrap' }, 'Nastavení'),
+            m(m.route.Link, { href: '/nastaveni', class: 'hover:underline block px-3 py-1 flex-no-wrap' }, 'Nastavení'),
             m('a', { onclick: $bl0k.actions.logout, href: '#', class: 'hover:underline block px-3 py-1 mb-1' }, 'Odhlásit')
           ])
         ])

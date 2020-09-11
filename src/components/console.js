@@ -214,7 +214,7 @@ const Editor = {
                   m('input.form-input.block.w-full', { type: 'text', oninput: Message.setProperty('source'), value: Message.source })
                 ])
               ]),
-              m('.block.mt-5', [
+              /* m('.block.mt-5', [
                 m('.inline.text-gray-700', [
                   'Přílohy',
                   m('.inline.text-sm.ml-2', '- obrázky')
@@ -222,7 +222,7 @@ const Editor = {
                 m('.flex.mt-2', [
                   m('.w-full', m(UploadBlock))
                 ])
-              ]),
+              ]), */
               m('h2.text-xl.pt-5.pb-2', 'Náhled'),
               m('.p-5.rounded-lg.border.border-gray-400.bg-white', [
                 m('article', [

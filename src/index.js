@@ -17,6 +17,7 @@ if ('scrollRestoration' in history) {
 }
 
 $bl0k.init({
+  env: process.env.NODE_ENV,
   apiUrl: 'https://api.bl0k.cz/1',
   apiWsUrl: 'wss://api.bl0k.cz/wss',
   title: 'bl0k.cz - Rychlé zprávy z kryptoměn',
@@ -71,7 +72,9 @@ m.route(root, '/', {
   '/0x:id/:slug': componentRoute(require('./components/Article')),
   '/p/:page': componentRoute(require('./components/Page')),
   '/u/:user': componentRoute(require('./components/UserDetail')),
-  '/settings': componentRoute(require('./components/Settings')),
+  '/komunity': componentRoute(require('./components/Groups')),
+  '/udalosti': componentRoute(require('./components/Events')),
+  '/nastaveni': componentRoute(require('./components/Settings')),
   '/console': consoleComponentRoute('Dashboard'),
   '/console/new': consoleComponentRoute('Editor'),
   '/console/edit/:id': consoleComponentRoute('Editor'),

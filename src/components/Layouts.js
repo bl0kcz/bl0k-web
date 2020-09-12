@@ -1,5 +1,5 @@
 
-const { $bl0k, m } = require('../lib/bl0k')
+const { m } = require('../lib/bl0k')
 
 const SimpleLayout = {
   view (vnode) {

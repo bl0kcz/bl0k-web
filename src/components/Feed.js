@@ -2,7 +2,7 @@ const { $bl0k, m } = require('../lib/bl0k')
 
 const ArticleContent = require('./ArticleContent')
 
-const InfoPanel = {
+/* const InfoPanel = {
   view () {
     return m('.p-5', [
       m('.bg-teal-100.border-t-4.border-teal-500.rounded-b.text-teal-900.px-4.py-3', { role: 'alert' }, [
@@ -21,7 +21,7 @@ const InfoPanel = {
       ])
     ])
   }
-}
+} */
 
 function selectItem (id) {
   return (e) => {
@@ -42,7 +42,6 @@ const Feed = {
     if (!vnode.attrs.items) {
       return m('.p-5', 'Načítám obsah ...')
     }
-    const opts = vnode.attrs.opts || {}
     const items = vnode.attrs.items
     const important = vnode.attrs.important
     const maxi = vnode.attrs.maxi
@@ -50,7 +49,7 @@ const Feed = {
       return m('.p-5', 'Nenalezeny žádné zprávy.')
     }
     return m('div', [
-      (opts.chain || opts.topic || important || $bl0k.auth) ? '' : m(InfoPanel),
+      // (opts.chain || opts.topic || important || $bl0k.auth) ? '' : m(InfoPanel),
       items.map(i => {
         const bg = ((type) => {
           switch (type) {

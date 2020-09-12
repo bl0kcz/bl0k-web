@@ -28,7 +28,7 @@ const Header = {
       // menu.push({ url: `/komunity`, title: 'Komunity' })
     }
 
-    return m(BaseHeader, m('.text-sm', menu.map(mi => {
+    return m(BaseHeader, { full: true }, m('.text-sm', menu.map(mi => {
       const name = mi.title || mi.chain.name
       /* if (mi.chain.ico) {
         name = [ m(`i.pr-1.${mi.chain.ico}`, { style: 'font-family: cryptofont' } ), name ]
@@ -37,23 +37,41 @@ const Header = {
       if ((selChain && (selChain === mi.chainId || selChain === name.toLowerCase())) || (mi.chainId === 'all' && !selChain)) {
         return m('span.underline.font-semibold.pr-3', name)
       }
-      return m('.hidden.sm:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'mr-3 py-4 hover:underline' }, name))
+      return m('.hidden.sm:inline-block', m(m.route.Link, { href: mi.url ? mi.url : `/chain/${mi.chainId}`, class: 'mr-3 py-3 hover:underline' }, name))
     })))
   }
 }
 
+function backLinkHandler () {
+  window.history.back()
+  return false
+}
+
 const BaseHeader = {
   view: (vnode) => {
+    const links = []
+
+    if (vnode.attrs.full !== true) {
+      links.push(['Hlavní strana', '/', true])
+    }
+
+    if (window.history.length > 0 && vnode.attrs.showReturn) {
+      links.push([[m('i.fas.fa-angle-double-left.mr-2'), 'Vrátit zpět'], backLinkHandler])
+    }
+
     return m('.w-full.flex', [
       m('.w-5/6.lg:w-4/6.flex.items-center', [
         m('h1', m(Logo, { loadStatus: null })),
         vnode.attrs.title ? m('span.text-sm.hidden.md:inline-block', vnode.attrs.title) : '',
-        vnode.attrs.showReturn ? m('span.pl-5.text-sm', m(m.route.Link, { class: 'hover:underline', href: '/' }, '← Zpět na zprávy')) : '',
+        m('.text-sm.flex.items-center', links.map(l => {
+          const isFn = typeof (l[1]) === 'function'
+          return m((isFn ? 'a' : m.route.Link), { class: 'hover:underline block mr-5 py-3' + (l[2] ? ' hidden lg:block' : ''), href: isFn ? '#' : l[1], onclick: isFn ? l[1] : null }, l[0])
+        })),
         vnode.children
       ]),
       m('.w-1/6.lg:w-2/6.flex.justify-end', [
         m('.flex.items-center.text-sm.pr-5.justify-end', [
-          m(m.route.Link, { href: '/console/new', class: 'hover:underline hidden lg:inline-block' }, m.trust('Přidat novou zprávu')),
+          m(m.route.Link, { href: '/console/new', class: 'hover:underline hidden lg:inline-block py-3' }, [m('i.fas.fa-plus.mr-2'), 'Přidat zprávu']),
           m('.ml-5', m(AuthPart))
           // m('div', m(m.route.Link, { href: '/p/o-nas', class: 'hover:underline' }, m.trust('Co je to bl0k?')))
         ])
@@ -138,7 +156,7 @@ const AuthPart = {
         m(m.route.Link, { href: `/u/${auth.user.username}` },
           m('.w-6.h-6.mr-2.rounded-full', { style: `background: url(${auth.user.avatar}); background-size: 100% 100%;` })
         ),
-        m(m.route.Link, { class: 'hover:underline hidden md:inline', href: `/u/${auth.user.username}` }, username)
+        m(m.route.Link, { class: 'hover:underline hidden md:inline py-3', href: `/u/${auth.user.username}` }, username)
       ])
     ])
   }

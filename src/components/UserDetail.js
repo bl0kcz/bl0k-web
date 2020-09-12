@@ -52,7 +52,7 @@ module.exports = {
                 user.data.fullName ? m('.break-all', m('.text-3xl', user.data.fullName)) : '',
                 m('div', { title: user.id, class: user.data.fullName ? 'text-lg' : 'text-3xl' }, '@' + user.username)
               ]),
-              !user.admin ? '' : m('span.font-bold.text.px-2.py-1.w-auto.bg-red-200.text-red-700.rounded.text-sm', 'admin'),
+              !user.admin ? '' : m('span.font-bold.text.px-2.py-1.w-auto.bg-red-200.text-red-700.rounded.text-sm', [m('i.fas.fa-bl0k.mr-2'), 'admin']),
               // m('.mt-2.wrap-all', ['ID: ', m('span.font-mono.text-xl', user.id)]),
               m('.mt-2', ['Členem od ', m('span', { title: user.created }, `${format(new Date(user.created), 'd.M.yyyy')}`)]),
               user.data.webUrl ? m('.mt-1', ['Web: ', m('a.hover:underline.text-red-700', { target: '_blank', href: user.data.webUrl, rel: 'noopener' }, user.data.webUrl)]) : '',

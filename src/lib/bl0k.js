@@ -62,30 +62,33 @@ class Bl0kEngine {
       m.redraw()
       setTimeout(() => {
         this.reconnectWs()
-      }, 2000)
+      }, 5000)
     }
     this._ws = new WebSocket(this.options.apiWsUrl)
     this._ws.onopen = () => {
-      console.log(`Websocket connected: ${this.options.apiWsUrl}`)
-      this.ws = { connected: true }
+      this.wsRequest('call', { method: 'version' }).then(() => {
+        console.log(`Websocket connected: ${this.options.apiWsUrl}`)
+        this.ws = { connected: true }
 
-      if (this.auth) {
-        this.wsSend('auth', this.auth.token)
-      }
-      this.fetchData('online').then(online => {
-        if (this.options.env === 'production') {
-          this.checkCurrentVersion(online.webLatest)
+        if (this.auth) {
+          this.wsSend('auth', this.auth.token)
         }
-      })
-      this.fetchData('infobar')
+        this.fetchData('online').then(online => {
+          if (this.options.env === 'production') {
+            this.checkCurrentVersion(online.webLatest)
+          }
+        })
+        this.fetchData('infobar')
 
-      m.redraw()
+        m.redraw()
+      })
     }
     this._ws.onclose = (e) => {
       console.error(`socket closed: ${e}`)
       onClose()
     }
     this._ws.onerror = (e) => {
+      this.ws.connected = false
       console.error(`socket error: ${e}`)
     }
     this._ws.onmessage = (message) => {
@@ -125,12 +128,13 @@ class Bl0kEngine {
   }
 
   reconnectWs () {
-    console.log('trying reconnect ..')
+    console.log('ws - trying hard reconnect ..')
     this.initWs()
   }
 
   wsSend (type, msg) {
     if (!this._ws) {
+      console.error('ws not ready')
       return null
     }
     return this._ws.send(JSON.stringify([type, msg]))
@@ -185,16 +189,19 @@ class Bl0kEngine {
     return this.dataStore.objects[col].find(x => x.id === id || x.sid === id)
   }
 
-  dataObjectUpdate (col, id, data) {
+  dataObjectUpdate (col, id, data, insert = true) {
     if (!this.dataStore.objects[col]) {
       this.dataStore.objects[col] = []
     }
     const found = this.dataStore.objects[col].findIndex(x => x.id === id || x.sid === id)
     if (found !== -1) {
       this.dataStore.objects[col][found] = data
-    } else {
+    } else if (insert) {
       this.dataStore.objects[col].push(data)
       this.dataStore.objects[col].sort((a, b) => new Date(b.date) - new Date(a.date))
+    }
+    if (col === 'articles') {
+      this.dataObjectUpdate('important', id, data, false)
     }
     return true
   }
@@ -280,7 +287,10 @@ class Bl0kEngine {
         qs.append(prop, opts.query[prop])
       }
       const qsString = qs.toString()
-      res = await this.request(url + (qsString ? `?${qsString}` : ''))
+      res = await this.request({
+        url: url + (qsString ? `?${qsString}` : ''),
+        method: endpoint.method
+      })
     }
     return res
   }

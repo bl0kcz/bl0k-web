@@ -2,6 +2,11 @@
 
 module.exports = ({ $bl0k, m }) => ({
 
+  likeArticle (item) {
+    $bl0k.uniRequest('articleLike', { params: { id: item.id } })
+    return false
+  },
+
   deleteArticle (item) {
     if (!confirm(`Opravdu smazat zprávu "${item.sid}"?`)) {
       return false
@@ -57,14 +62,16 @@ module.exports = ({ $bl0k, m }) => ({
           }
 
           localStorage.setItem('auth', JSON.stringify(out))
-          $bl0k.initAuth()
-          m.redraw()
+          $bl0k.initAuth().then(() => {
+            m.redraw()
 
-          const rt = m.route.get()
-          // console.log(rt)
-          if (rt.match(/^\/chain/) || rt === '/') {
-            // loadData(true)
-          }
+            const rt = m.route.get()
+            // console.log(rt)
+            if (rt.match(/^\/chain/) || rt === '/') {
+              $bl0k.fetchData('bundle', {}, { reload: true })
+              // loadData(true)
+            }
+          })
         })
       })
     })

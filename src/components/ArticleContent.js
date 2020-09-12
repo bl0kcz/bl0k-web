@@ -30,8 +30,9 @@ const DetailBox = {
           // m('span.text-xs', item.id),
           m(m.route.Link, { class: 'w-6 h-6 mr-3', href: `/u/${item.author.username}` }, m('.inline-block.h-full.w-full.rounded-full', { style: `background: url(${item.author.avatar}); background-size: 100% 100%;` })),
           m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `${item.author.username}`) : ''),
-          (std || item.type === 'draft') ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Přidat komentář'),
+          // (std || item.type === 'draft') ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Přidat komentář'),
           // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
+          m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: `/console/new?thread=${item.id}`, title: 'Navázat novou zprávu' }, m('i.fas.fa-stream.text')),
           allowModify ? m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: `/console/edit/${item.id}`, title: 'Upravit' }, [m('i.fas.fa-edit.text'), std || item.type !== 'public' ? m('span.ml-2', 'Upravit') : '']) : '',
           allowModify ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: '#', title: 'Smazat', onclick: () => $bl0k.actions.deleteArticle(item) }, [m('i.fas.fa-trash-alt.text'), std ? m('span.ml-2', 'Smazat') : '']) : '',
           allowModify && item.type === 'draft' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline hover:text-blue-900 text-blue-700', title: 'Do fronty', href: '#', onclick: () => $bl0k.actions.changeArticleType(item, 'in-queue') }, [m('i.fas.fa-check'), std || item.type === 'draft' ? m('span.ml-2', 'Do fronty') : '']) : '',
@@ -73,8 +74,8 @@ const TwitterScreenEmbed = {
     this.imageSrc = `https://bl0k.cz/static/tweets/${this.id}.png`
   },
   view (vnode) {
-    return m('a', { href: vnode.attrs.embed.meta.url, target: '_blank', rel: 'noopener', style: 'image-rendering: high-quality;' },
-      m('img.mt-3.bl0k-no-click', { style: 'width: 500px', src: this.imageSrc, alt: `Tweet ${this.id}` })
+    return m('a.mt-3', { href: vnode.attrs.embed.meta.url, target: '_blank', rel: 'noopener', style: 'image-rendering: high-quality;' },
+      m('img.bl0k-no-click', { style: 'width: 500px', src: this.imageSrc, alt: `Tweet ${this.id}` })
     )
   }
 }
@@ -92,6 +93,32 @@ const BaseHtml = {
   },
   view () {
     return m('.bl0k-base-html')
+  }
+}
+
+const SocialBar = {
+  view (vnode) {
+    const i = vnode.attrs.item
+    const stndl = vnode.attrs.standalone
+    const output = []
+    const userLiked = (i.userState && i.userState.like) || ($bl0k.auth && i.likes && i.likes.find(l => l.author === $bl0k.auth.userId))
+    const userHover = $bl0k.auth
+    output.push(m('.mr-5.transition.duration-200' + (userHover ? '.hover:text-red-700.cursor-pointer' : '') + (i.likesCount > 0 ? '.text-gray-700' : ''), { href: '#', class: userLiked ? 'text-blue-500 font-bold' : '', onclick: () => $bl0k.actions.likeArticle(i) }, [m('i.fas.fa-fire.mr-2'), m('span.text-sm', i.likesCount)]))
+    // output.push(m('a.mr-5.hover:underline', { href: '#' }, [ m('i.fas.fa-bookmark.mr-1'), '' ]))
+
+    // let cstr = i.commentsCount > 0 ? m('.text-gray-700', i.commentsCount) : '0'
+    /* if (i.commentsCount > 0 && !this.standalone) {
+      cstr = `${i.commentsCount} komenáře`
+      if (i.commentsCount === 1) {
+        cstr = `${i.commentsCount} komentář`
+      } else if (i.commentsCount > 4) {
+        cstr = `${i.commentsCount} komentářů`
+      }
+    } */
+
+    output.push(m(stndl ? 'span' : m.route.Link, { href: i.url, class: 'bl0k-comments-link' + (stndl ? '' : ' transition duration-200 hover:text-red-700') + (i.commentsCount > 0 ? ' text-gray-700' : '') }, m('.whitespace-no-wrap', [m('i.fas.fa-comment.mr-2'), m('span.text-sm', i.commentsCount)])))
+
+    return m('.text-gray-400.text-md.mt-2.ml-5.flex', output)
   }
 }
 
@@ -135,16 +162,6 @@ module.exports = {
       baseHtml = 'n/a'
     }
     this.htmlArr = [m(BaseHtml, { text: baseHtml })]
-
-    if (i.commentsCount > 0 && !this.standalone) {
-      let str = 'komenáře'
-      if (i.commentsCount === 1) {
-        str = 'komentář'
-      } else if (i.commentsCount > 4) {
-        str = 'komentářů'
-      }
-      this.htmlArr.push(m('.inline.ml-3.text-sm.whitespace-no-wrap', ['💬 ', m(m.route.Link, { href: i.url, class: 'bl0k-comments-link hover:underline text-gray-700' }, `${i.commentsCount} ${str}`)]))
-    }
   },
 
   view (vnode) {
@@ -159,7 +176,9 @@ module.exports = {
         m('.pl-3.font-normal.text-gray-700', tagsTopic(i.tags, this))
       ]),
       content: [
+        this.item.thread ? m('.text-sm.mb-3', [m('i.fas.fa-stream.mr-2'), m(m.route.Link, { href: this.item.thread.url, class: 'hover:underline' }, this.item.thread.card.stitle)]) : '',
         m('.content', m('.break-words', this.htmlArr)),
+        this.item.type !== 'draft' ? m(SocialBar, { item: this.item, standalone: this.standalone }) : '',
         m('.flex.justify-center', i.embeds.map(embed => {
           if (embed.type === 'twitter') {
             return m(TwitterScreenEmbed, { embed })

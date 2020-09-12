@@ -207,6 +207,15 @@ module.exports = {
     this.showHistory = false
     loadArticle(this.id)
   },
+  onupdate (vnode) {
+    const id = '0x' + vnode.attrs.id
+    if (id !== this.id) {
+      this.id = id
+      this.showHistory = false
+      loadArticle(this.id)
+      m.redraw()
+    }
+  },
   onremove (vnode) {
     data.article = null
   },
@@ -225,7 +234,7 @@ module.exports = {
           m('article.text-lg.md:text-xl.mx-2.md:mx-0', m(ArticleContent, { item: article, standalone: true }))
         ]),
         m('.p-5', [
-          ((article.type === 'draft' && user.admin !== true) && article.commentsCount === 0) ? '' : m('.mb-5', [
+          ((article.type === 'draft' && ((user && user.admin !== true) || !user)) && article.commentsCount === 0) ? '' : m('.mb-5', [
             m('h2.text-lg', `Komentáře (${article.commentsCount})`),
             m(Comments, { article })
           ]),

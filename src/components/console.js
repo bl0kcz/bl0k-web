@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns'
 const { $bl0k, m } = require('../lib/bl0k')
 const { SimpleHeader } = require('./Headers')
 const marked = require('marked')
-const FilePond = require('filepond')
+// const FilePond = require('filepond')
 
 const data = {}
 
@@ -17,13 +17,13 @@ const Layout = {
 
   view (vnode) {
     return [
-      m(SimpleHeader, { name: m(m.route.Link, { class: 'hover:underline', href: '/console' }, 'Konzole') }),
+      m(SimpleHeader, { name: null }),
       m('div', vnode.children)
     ]
   }
 }
 
-const UploadBlock = {
+/* const UploadBlock = {
   oncreate (vnode) {
     FilePond.setOptions({
       server: $bl0k.options.apiUrl
@@ -37,13 +37,14 @@ const UploadBlock = {
   view () {
     return m('div')
   }
-}
+} */
 
 const Message = {
   text: '',
   chains: '',
   tags: '',
   source: '',
+  thread: '',
   setProperty: function (prop) {
     return (e) => {
       this[prop] = e.target.value
@@ -55,7 +56,8 @@ const Message = {
       text: this.text,
       chains: this.chains.split(',').map(i => i.trim()).filter(i => i),
       tags: this.tags.split(',').map(i => i.trim()).filter(i => i),
-      source: this.source
+      source: this.source,
+      thread: this.thread
     }
   },
   reset: function () {
@@ -63,6 +65,7 @@ const Message = {
     this.chains = ''
     this.tags = ''
     this.source = ''
+    this.thread = ''
   }
 }
 
@@ -78,6 +81,10 @@ function loadArticle (id) {
       } else {
         Message[col] = article.data[col]
       }
+    }
+
+    if (out.data.thread) {
+      loadThread(out.data.thread.id || out.data.thread)
     }
 
     m.redraw()
@@ -128,11 +135,19 @@ function articleDiff () {
   return false
 }
 
+function loadThread (id) {
+  Message.thread = id
+  $bl0k.fetchData('article', { id })
+}
+
 const Editor = {
   oninit (vnode) {
     this.mode = vnode.attrs.id ? 'edit' : 'create'
     if (this.mode === 'edit') {
       loadArticle(vnode.attrs.id)
+    }
+    if (vnode.attrs.thread) {
+      loadThread(vnode.attrs.thread)
     }
   },
 
@@ -163,6 +178,7 @@ const Editor = {
     const diff = articleDiff()
 
     const auth = $bl0k.auth
+    const thread = Message.thread ? $bl0k.dataObject('articles', Message.thread) : false
 
     const saveEnabled = auth && ((this.mode === 'edit' && diff) || (this.mode === 'create' && Message.text))
 
@@ -171,6 +187,10 @@ const Editor = {
         m('.lg:w-4/6.pt-2.sm:w-11/12.sm:px-0.px-5', [
           m('h2.text-2xl.pb-2', vnode.attrs.id ? ['Úprava zprávy ', m(m.route.Link, { class: 'font-mono text-3xl pl-2', href: article.url }, article.sid)] : 'Nová zpráva'),
           m('form.w-full.p-5.bg-gray-200.rounded', { onsubmit: () => false }, [
+            thread !== false ? m('.mb-5.text-red-700', [
+              m('i.fas.fa-stream.mr-2', { title: 'Vlákno zpráv' }),
+              m('.inline', thread ? m(m.route.Link, { href: thread.url, class: 'hover:underline' }, thread.card.stitle) : 'Načítám ...')
+            ]) : '',
             m('label.block', [
               m('textarea.form-textarea.mt-1.block.w-full.font-mono.text-lg', { rows: 7, placeholder: 'Tady je místo pro vaši zprávu ..', oninput: Message.setProperty('text'), value: Message.text })
             ]),

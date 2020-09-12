@@ -76,7 +76,7 @@ m.route(root, '/', {
   '/udalosti': componentRoute(require('./components/Events')),
   '/nastaveni': componentRoute(require('./components/Settings')),
   '/console': consoleComponentRoute('Dashboard'),
-  '/console/new': consoleComponentRoute('Editor'),
-  '/console/edit/:id': consoleComponentRoute('Editor'),
+  '/create': consoleComponentRoute('Editor'),
+  '/edit/:id': consoleComponentRoute('Editor'),
   '/:chain': componentRoute(App, false)
 })

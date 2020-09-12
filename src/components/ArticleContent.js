@@ -7,7 +7,7 @@ function articleLink (item, text) {
 
 function chainTopic (chains, article = {}) {
   return (article.standalone ? chains : chains.slice(0, 1)).map(chain => {
-    return m(m.route.Link, { href: `/chain/${chain.id}`, class: 'hover:underline mr-2 inline' }, chain.name)
+    return m(m.route.Link, { href: `/chain/${chain ? chain.id : chain}`, class: 'hover:underline mr-2 inline' }, chain ? chain.name : chain)
   })
 }
 
@@ -32,8 +32,8 @@ const DetailBox = {
           m('span.font-semibold', item.author ? m(m.route.Link, { href: `/u/${item.author.username}`, class: 'hover:underline text-md' }, `${item.author.username}`) : ''),
           // (std || item.type === 'draft') ? '' : m(m.route.Link, { class: 'ml-6 hover:underline', href: item.url }, 'Přidat komentář'),
           // m(m.route.Link, { class: 'ml-5 hover:underline', href: item.surl }, 'Shortlink'),
-          m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: `/console/new?thread=${item.id}`, title: 'Navázat novou zprávu' }, m('i.fas.fa-stream.text')),
-          allowModify ? m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: `/console/edit/${item.id}`, title: 'Upravit' }, [m('i.fas.fa-edit.text'), std || item.type !== 'public' ? m('span.ml-2', 'Upravit') : '']) : '',
+          m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: `/create?thread=${item.id}`, title: 'Navázat novou zprávu' }, m('i.fas.fa-stream.text')),
+          allowModify ? m(m.route.Link, { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: `/edit/${item.sid}`, title: 'Upravit' }, [m('i.fas.fa-edit.text'), std || item.type !== 'public' ? m('span.ml-2', 'Upravit') : '']) : '',
           allowModify ? m('a', { class: 'bl0k-article-control ml-5 hover:underline text-gray-700 hover:text-black', href: '#', title: 'Smazat', onclick: () => $bl0k.actions.deleteArticle(item) }, [m('i.fas.fa-trash-alt.text'), std ? m('span.ml-2', 'Smazat') : '']) : '',
           allowModify && item.type === 'draft' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline hover:text-blue-900 text-blue-700', title: 'Do fronty', href: '#', onclick: () => $bl0k.actions.changeArticleType(item, 'in-queue') }, [m('i.fas.fa-check'), std || item.type === 'draft' ? m('span.ml-2', 'Do fronty') : '']) : '',
           admin && item.type !== 'public' ? m('a', { class: 'bl0k-article-control ml-5 hover:underline hover:text-green-900 text-green-700 font-semibold', title: 'Publikovat', href: '#', onclick: () => $bl0k.actions.changeArticleType(item, 'public') }, [m('i.fas.fa-check-double'), std || item.type === 'in-queue' ? m('span.ml-2', 'Publikovat') : '']) : '',

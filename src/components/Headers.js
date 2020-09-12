@@ -71,7 +71,7 @@ const BaseHeader = {
       ]),
       m('.w-1/6.lg:w-2/6.flex.justify-end', [
         m('.flex.items-center.text-sm.pr-5.justify-end', [
-          m(m.route.Link, { href: '/console/new', class: 'hover:underline hidden lg:inline-block py-3' }, [m('i.fas.fa-plus.mr-2'), 'Přidat zprávu']),
+          m(m.route.Link, { href: '/create', class: 'hover:underline hidden lg:inline-block py-3' }, [m('i.fas.fa-plus.mr-2'), 'Přidat zprávu']),
           m('.ml-5', m(AuthPart))
           // m('div', m(m.route.Link, { href: '/p/o-nas', class: 'hover:underline' }, m.trust('Co je to bl0k?')))
         ])

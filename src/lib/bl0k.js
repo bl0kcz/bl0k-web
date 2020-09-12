@@ -284,7 +284,7 @@ class Bl0kEngine {
         if (opts.query[prop] === undefined) {
           continue
         }
-        qs.append(prop, opts.query[prop])
+        qs.append(prop, String(opts.query[prop]))
       }
       const qsString = qs.toString()
       res = await this.request({

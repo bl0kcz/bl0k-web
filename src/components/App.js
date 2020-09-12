@@ -68,7 +68,10 @@ function getOptions (obj) {
 
 function loadData (vnode) {
   return $bl0k.fetchData('bundle', getOptions(vnode.state.opts))
-    .then(() => initScroll())
+    .then((bundle) => {
+      $bl0k.setPageDetail({ title: bundle.header && bundle.header.data ? bundle.header.data.title : null })
+      initScroll()
+    })
 }
 
 module.exports = {

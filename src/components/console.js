@@ -72,7 +72,7 @@ const Message = {
 let article = null
 
 function loadArticle (id) {
-  $bl0k.request(`/article/${id}?compat=false`).then(out => {
+  $bl0k.uniRequest('article', { params: { id }, query: { compat: false } }).then(out => {
     article = out
 
     for (const col of ['text', 'tags', 'chains', 'source']) {
@@ -204,34 +204,31 @@ const Editor = {
               m('.block.mt-5', [
                 m('.inline.text-gray-700', [
                   'Relevantní blockchainy',
-                  m('.inline.text-sm.ml-2', '- podle důležitosti, oddělené čárkou - např. "btc,eth"')
+                  m('.inline.text-sm.ml-2', '- podle důležitosti, oddělené čárkou')
                 ]),
                 m('.flex.mt-2', [
-                  m('input.form-input.block.w-2/6', { type: 'text', oninput: Message.setProperty('chains'), value: Message.chains }),
+                  m('input.form-input.block.w-2/6', { type: 'text', oninput: Message.setProperty('chains'), value: Message.chains, placeholder: 'Např. eth,btc ..' }),
                   m('.w-4/6.pl-5.h-auto.items-center.flex', [
-                    !chainError ? m('span', chains.join(', ')) : m('span.text-red-700', chainError)
+                    !chainError ? m('span', chains.map(ch => m('a', { href: `/chain/${ch}`, target: '_blank', class: 'mr-3 text-gray-700 hover:underline' }, ch))) : m('span.text-red-700', chainError)
                   ])
                 ])
               ]),
               m('.block.mt-5', [
                 m('.inline.text-gray-700', [
                   'Tagy',
-                  m('.inline.text-sm.ml-2', '- podle důležitosti, oddělenné čárkou, např. "DeFi,burzy,parachain"')
+                  m('.inline.text-sm.ml-2', '- podle důležitosti, oddělenné čárkou')
                 ]),
                 m('.flex.mt-2', [
-                  m('input.form-input.block.w-2/6', { type: 'text', oninput: Message.setProperty('tags'), value: Message.tags }),
+                  m('input.form-input.block.w-2/6', { type: 'text', oninput: Message.setProperty('tags'), value: Message.tags, placeholder: 'Např. DeFi,burzy ..' }),
                   m('.w-4/6.pl-5.h-auto.items-center.flex', [
-                    m('span', tags.join(', '))
+                    m('span', tags.map(t => m('a', { href: `/t/${t.substring(1)}`, target: '_blank', class: 'mr-3 text-gray-700 hover:underline' }, t)))
                   ])
                 ])
               ]),
               m('.block.mt-5', [
-                m('.inline.text-gray-700', [
-                  'Zdroj',
-                  m('.inline.text-sm.ml-2', '- URL adresa zdroje, např. tweetu či článku')
-                ]),
+                m('.inline.text-gray-700', ['Zdroj']),
                 m('.flex.mt-2', [
-                  m('input.form-input.block.w-full', { type: 'text', oninput: Message.setProperty('source'), value: Message.source })
+                  m('input.form-input.block.w-full', { type: 'text', oninput: Message.setProperty('source'), value: Message.source, placeholder: 'URL adresa zdroje, např. tweetu či článku ..' })
                 ])
               ]),
               /* m('.block.mt-5', [
@@ -255,7 +252,7 @@ const Editor = {
               m(`button.${saveEnabled ? 'bg-blue-500.hover:bg-blue-700' : 'bg-gray-400.cursor-not-allowed'}.text-white.py-2.px-4.rounded.transition.duration-200.ease-in-out`, { onclick: this.mode === 'create' ? createArticle : saveArticle, disabled: !saveEnabled ? 'disabled' : '' }, this.mode === 'edit' ? 'Uložit' : 'Vytvořit koncept')
             ]),
             auth ? '' : m('.mt-5.text-red-700', 'Pro vkládání a úpravu článků musíte být přihlášeni.')
-          ])
+          ]),
           /* m('.mt-1', [
                 m('label', [
                   m('input.form-checkbox', { type: 'checkbox' }),
@@ -275,6 +272,19 @@ const Editor = {
               ])
             ])
           ]) */
+          m('.mt-8.mb-10.w-full', [
+            m('.text-xl', 'Pravidla pro vytváření zpráv'),
+            m('.prose.w-full.mt-3', { style: 'max-width: 100% !important;' }, [
+              m('ol.ml-5', [
+                m('li', 'Zpráva by měla být co nejstručnější - ideální délka je 150 - 250 znaků (viditelných).'),
+                m('li', 'Zachovejte objektivitu - názory si nechte do komentářů.'),
+                m('li', 'Vždy uvádějte zdroj vaší zprávy (pokud již není odkazován v samotném textu).'),
+                m('li', ['Pro označení tokenů využijte formát ', m('span.font-mono.text-lg', '$<SYMBOL>'), ' (např. ', m('span.font-mono.text-lg', '$BTC'), ').']),
+                m('li', ['Dodržujte základní typografické zvyklosti - mezera po tečce/čárce atp. (viz ', m('a', { href: 'https://cs.wikipedia.org/wiki/Wikipedie:Typografick%C3%A9_rady', target: '_blank' }, 'Wikipedie:Typografické rady'), ').']),
+                m('li', 'Reklama je zakázaná.')
+              ])
+            ])
+          ])
         ])
       ])
     ]
@@ -311,7 +321,7 @@ const TableList = {
             i.tags ? m('p', i.tags.map(x => `#${x}`).join(', ')) : ''
           ]),
           m('td.px-3', [
-            m(m.route.Link, { href: `/console/edit/${i.id}` }, m('button.bg-blue-500.hover:bg-blue-700.text-white.py-2.px-4.rounded.mr-2.text-sm.mt-1', 'Upravit')),
+            m(m.route.Link, { href: `/edit/${i.sid}` }, m('button.bg-blue-500.hover:bg-blue-700.text-white.py-2.px-4.rounded.mr-2.text-sm.mt-1', 'Upravit')),
             vnode.attrs.type !== 'queue' ? '' : m(m.route.Link, { href: '/' }, m('button.bg-green-500.hover:bg-green-700.text-white.py-2.px-4.rounded.mr-2.text-sm.mt-1', 'Publikovat'))
           ]),
           m('td.px-3', [

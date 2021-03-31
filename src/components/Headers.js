@@ -1,4 +1,4 @@
-const { $bl0k, m } = require('../lib/bl0k')
+const { $bl0k, m, $ } = require('../lib/bl0k')
 const Infobar = require('./Infobar')
 
 const Header = {
@@ -73,7 +73,6 @@ const BaseHeader = {
         m('.flex.items-center.text-sm.pr-5.justify-end', [
           m(m.route.Link, { href: '/create', class: 'hover:underline hidden lg:inline-block py-3' }, [m('i.fas.fa-plus.mr-2'), 'Přidat zprávu']),
           m('.ml-5', m(AuthPart))
-          // m('div', m(m.route.Link, { href: '/p/o-nas', class: 'hover:underline' }, m.trust('Co je to bl0k?')))
         ])
       ])
       // m('p.text-sm', 'Rychlé zprávy z kryptoměn')
@@ -89,6 +88,23 @@ const SimpleHeader = {
         m(BaseHeader, { title: vnode.attrs.name, showReturn: true })
       ])
     ]
+  }
+}
+
+const Dropdown = {
+  view (vnode) {
+    const auth = $bl0k.auth
+    const style = {
+      left: vnode.attrs.left,
+      right: vnode.attrs.right,
+      top: vnode.attrs.top
+    }
+
+    return m('.bl0k-dropdown.hidden.relative.text-sm', [
+      m('.bg-white.absolute', { style: Object.keys(style).filter(sk => style[sk] > 0).map(sk => `${sk}: ${style[sk]}rem;`).join('') + '; z-index: 1;' }, [
+        m('.w-32.h-auto.border.rounded.shadow', vnode.children)
+      ])
+    ])
   }
 }
 
@@ -118,9 +134,15 @@ const Logo = {
     }, 30) */
   },
   view (vnode) {
-    return m('.mx-5',
-      m(m.route.Link, { href: '/', style: 'font-family: monospace;', title: 'bl0k.cz' },
-        m('.fax.fa-bl0k.transition.duration-300.ease-in-out.hover:text-red-700.hover:shadow', { style: 'font-size: 1.63rem; margin-top: 3px;' })
+    const auth = $bl0k.auth && $bl0k.auth.user
+
+    return m('.mx-5.bl0k-dropdown-wrap.no-hidden.h-12',
+      m(Dropdown, { top: '2.4', left: '0.5' }, [
+        //m(m.route.Link, { href: `/autori`, class: 'hover:underline block px-3 py-1 flex-no-wrap mt-1', }, 'Autoři'),
+        m(m.route.Link, { href: `/p/o-nas`, class: 'hover:underline block px-3 py-1 flex-no-wrap mt-1 mb-1', onclick: t => dropdownClick(vnode.dom) }, 'Co je to Bl0k?'),
+      ]),
+      m(m.route.Link, { href: '/', style: 'font-family: monospace;', class: 'block h-12 flex items-center', title: 'bl0k.cz' },
+        m('.fax.fa-bl0k.transition.duration-300.ease-in-out.hover:text-red-700.hover:shadow', { style: 'font-size: 1.63rem; margin-bottom: 1px;' })
       )
       // m('img.h-8', { src: logoImage, alt: 'bl0k.cz' }))
     )
@@ -128,8 +150,16 @@ const Logo = {
   }
 }
 
+
+function dropdownClick (el) {
+  console.log('click')
+  $(el).removeClass('no-hidden')
+  setTimeout(() => $(el).addClass('no-hidden'), 100)
+  return true
+}
+
 const AuthPart = {
-  view () {
+  view (vnode) {
     const auth = $bl0k.auth
     if (!auth) {
       return m('a.hover:underline', { onclick: $bl0k.actions.ethLogin, href: '#' }, 'Přihlásit')
@@ -142,15 +172,11 @@ const AuthPart = {
       return null
     }
 
-    return m('.bl0k-auth-header.h-12', [
-      m('.bl0k-dropdown.hidden', [
-        m('.bg-white.absolute', { style: 'top: 4.7rem; right: 1rem; z-index: 1;' }, [
-          m('.w-32.h-auto.border.rounded.shadow', [
-            m(m.route.Link, { href: `/u/${auth.user.username}`, class: 'hover:underline block px-3 py-1 flex-no-wrap mt-1' }, 'Zobrazit profil'),
-            m(m.route.Link, { href: '/nastaveni', class: 'hover:underline block px-3 py-1 flex-no-wrap' }, 'Nastavení'),
-            m('a', { onclick: $bl0k.actions.logout, href: '#', class: 'hover:underline block px-3 py-1 mb-1' }, 'Odhlásit')
-          ])
-        ])
+    return m('.bl0k-dropdown-wrap.no-hidden.h-12', [
+      m(Dropdown, { top: '2.4', right: '0.1' }, [
+        m(m.route.Link, { href: `/u/${auth.user.username}`, class: 'hover:underline block px-3 py-1 flex-no-wrap mt-1', onclick: () => dropdownClick(vnode.dom) }, 'Zobrazit profil'),
+        m(m.route.Link, { href: '/nastaveni', class: 'hover:underline block px-3 py-1 flex-no-wrap', onclick: () => dropdownClick(vnode.dom) }, 'Nastavení'),
+        m('a', { onclick: $bl0k.actions.logout, href: '#', class: 'hover:underline block px-3 py-1 mb-1' }, 'Odhlásit')
       ]),
       m('.flex.items-center.relative.h-full', [
         m(m.route.Link, { href: `/u/${auth.user.username}` },
